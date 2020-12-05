@@ -1,0 +1,457 @@
+---
+title: "Übung 07"
+author: "DSIA Algorithmik & Statistik, SS 2020"
+date: 'Bis: Sonntag, 14.06.2020'
+output:
+  html_document:
+    df_print: paged
+urlcolor: cyan
+---
+
+Bitte um Beachtung der [Übungs-Policy](https://algo2-lab.netlify.com/%C3%BCbungs-policy.html) für genaue Anweisungen und einige Beurteilungsnotizen. Fehler bei der Einhaltung ergeben Punktabzug.
+
+Die Competition Anweisungen findest du auf WebLearn.
+
+Die Einreichung erfolgt unter: [Leaderboard](https://g4challenge.shinyapps.io/shiny-leaderboard/)
+
+Dieses Template soll bei der Erstellung der Einreichung helfen.
+
+Für die volle Punktzahl dokumentiere:
+
+- deine EDA
+- dein Training 
+- deine Schritte
+- deine Ergebnisse (Screenshot vom Online-Tool)
+- Diskussion der Ergebnisse (Speed vs. Long Run) - Strategien gegen Overfitting...
+
+
+```{r, warning = FALSE, message = FALSE}
+# suggested packages
+#pacman::p_load(
+#MASS,
+#tidymodels,#caret
+#tidyverse,
+#knitr,
+#kableExtra,
+#mlbench,
+#ISLR,
+#ellipse,
+#randomForest,
+#gbm,
+#glmnet,
+#rpart,
+#rpart.plot,
+#klaR,
+#gam,
+#e1071)
+# feel free to use additional packages
+```
+
+
+```{r}
+library(caret)
+library(dplyr)
+```
+
+***
+
+# Klassifikation [10 Punkte]
+
+```{r}
+library(readr)
+class_trn <- read_csv("class-trn.csv")
+class_tst = read_csv("class-tst.csv")
+```
+
+```{r}
+glimpse(class_trn)
+```
+
+Bei allen Inputvariable handelt es sich um Doubles und bei der Outputvariable um Characters, die entweder Zero oder One. Wir machen hier somit eine Zwei-Klassen Klassifikation.
+```{r}
+table(class_trn$y)
+```
+ Es gibt im Trainingsdatensatz etwas mehr Zeros als wie Ones. Da die Daten aber doch recht gut ausbalanciert sind, werde ich auf ein Upsampling verzichten.
+ 
+```{r}
+corr_mat=cor(class_trn[1:100,2:10],method="p")
+```
+ 
+```{r}
+library(corrplot)
+corrplot(corr_mat)
+```
+ 
+Der Corrplot zeigt, dass es zwischen den einzelnen Variable weder stark positive noch stark negative Korrelationen gibt. Deswegen werde ich zur Vorhersage alle Features verwenden. 
+
+```{r}
+library(randomForest)
+library(purrr)
+library(tidyr)
+library(ggplot2)
+```
+
+```{r}
+class_trn %>%
+  keep(is.numeric) %>% 
+  gather() %>% 
+  ggplot(aes(value)) +
+    facet_wrap(~ key, scales = "free") +
+    geom_histogram()
+```
+
+Die Verteilungen der einzelnen Features sind fast normalverteilt und alle features sind sehr ähnlicht verteilt.
+
+
+Für den Speedrun habe ich moch für ein Random Forest Modell entschieden.
+```{r}
+control <- trainControl(method='repeatedcv', 
+                        number=10, 
+                        repeats=3)
+metric <- "Accuracy"
+
+rf_default <- train(y~., 
+                      data=class_trn, 
+                      method='rf', 
+                      metric='Accuracy', 
+                      trControl=control)
+# classification task
+# place code here that trains the model used to submit your best result
+# only supply code needed to train that model
+```
+
+```{r}
+print(rf_default)
+```
+
+
+```{r}
+class_trn_x <- class_trn %>%
+  select(-y)
+tab_class <- table(class_trn$y, predict(rf_default, class_trn_x))
+
+confusionMatrix(tab_class)
+```
+
+
+```{r}
+# place code here that stores the test predictions that you submitted
+class_pred = predict(rf_default, class_tst)
+
+#fileName <- file.path(tempdir(), "class_pred")
+#write.csv(x=class_pred, col.names = "y", file = fileName)
+write.csv(x = tibble(Y = class_pred), file = "class_pred.csv")
+```
+
+Nun versuche ich noch ein Modell mit Tuning zu erstellen, bei dem ich hoffentlcih eine etwas bessere Accuracy erreiche.
+
+```{r}
+tunegrid <- expand.grid(.mtry = (1:15)) 
+
+rf_class_tuned <- train(y~., 
+                      data=class_trn, 
+                      method='rf', 
+                      metric='Accuracy', 
+                      trControl=control,
+                    tuneGrid = tunegrid)
+```
+
+```{r}
+print(rf_class_tuned)
+```
+
+```{r}
+# place code here that stores the test predictions that you submitted
+class_pred_tuned = predict(rf_class_tuned, class_tst)
+
+#fileName <- file.path(tempdir(), "class_pred")
+#write.csv(x=class_pred, col.names = "y", file = fileName)
+write.csv(x = tibble(Y = class_pred_tuned), file = "class_pred.csv")
+```
+
+Das Modell mit dem getunten Random Forest overfitted leider und erreicht eine schlechtere Test Accuracy als der simple RF.
+
+***
+
+# Regression [10 Punkte]
+
+```{r}
+reg_trn = read_csv("reg-trn.csv")
+reg_tst = read_csv("reg-tst.csv")
+```
+
+```{r}
+glimpse(reg_trn)
+```
+Im Regressionsdatensatz gibt es 22 Inputfeatures, wovon 20 numerisch sind (doubles) und 2 sind Characters mit jeweils 3 unterschiedlichen Buchstaben.
+
+```{r}
+table(reg_trn$X21)
+```
+
+```{r}
+table(reg_trn$X22)
+```
+
+```{r}
+corr_mat_reg=cor(reg_trn[1:100,2:20],method="p")
+corrplot(corr_mat_reg)
+```
+
+Auch in diesem Datensatz gibt es wenige Variablen die stark mit einander korrelieren. Auffällig ist nur, dass die ersten 4 Features stark positiv korrelieren. Weiters fällt noch auf das X19 und X8 leicht negativ korrelieren. Aber schwer aus diesen Daten daraus etwas rauszulesen.
+
+```{r}
+reg_trn %>%
+  keep(is.numeric) %>% 
+  gather() %>% 
+  ggplot(aes(value)) +
+    facet_wrap(~ key, scales = "free") +
+    geom_histogram()
+```
+
+Die einzelnen Verteilungen sind wieder sehr ähnlich. Interessant ist, dass die Outputvariable auch normalverteilt ist mit einem Mittelwert von knapp über 0. Die meisten Inputvariablen weisen einen Mean von ca. 10 auf.
+
+```{r}
+rmse = function(actual, predicted) {
+  sqrt(mean((actual - predicted) ^ 2))
+}
+```
+
+Für den Speedrun habe ich mich auch hier für einen Random Forest der Methode Ranger entschieden, um nicht zu viel Zeit zu brauchen, habe ich zu erst mit 300 Trees gestartet und konnte so bereits einen TraingsRmse von 1,1 erzielen.
+
+```{r}
+
+rrfFit <- train(y ~ ., 
+                 data = reg_trn,
+                 method = 'ranger',
+                 trControl = control,
+                ## parameters passed onto the ranger function
+                # the bigger the better.
+                 num.trees = 1000,
+                 importance = "permutation")
+# regression task
+# place code here that trains the model used to submit your best result
+# only supply code needed to train that model
+```
+
+Mit 800 Trees konnte ich bereits einen Traings-RMSE von unter 0,9 erreichen.
+
+```{r}
+rmse(reg_trn$y, predict(rrfFit, reg_trn))
+```
+
+```{r}
+# place code here that stores the test predictions that you submitted
+reg_pred = predict(rrfFit, reg_tst)
+```
+
+Nun versuche ich noch mit einem Boosed Tree einen niedrigeren RMSE zu erreichen.
+
+```{r}
+gbmGrid <-  expand.grid(interaction.depth = c(3, 5, 9), 
+                        n.trees = (1:30)*50, 
+                        shrinkage = 0.1,
+                        n.minobsinnode = 20)
+gbm_reg <- train(y ~ ., 
+                 data = reg_trn,
+                 method = 'gbm',
+                 trControl = control,
+                 metric = "RMSE")
+```
+
+```{r}
+rmse(reg_trn$y, predict(gbm_reg, reg_trn))
+```
+
+Ich habe mit dem boosted Tree einen etwas höheren Test-RMSE erreicht.
+
+```{r}
+
+write.csv(x = tibble(Y = reg_pred), file = "reg_pred.csv")
+```
+
+Nun versuche ich es noch mit einem glmnet, um zu sehen, ob dies besser abschneidet.
+
+```{r}
+grid_net <- expand.grid(.alpha = seq(0, 1, by = 0.2), .lambda = seq(0.00, 0.2, by = 0.02))
+
+
+control_net <- trainControl(method = "LOOCV")
+
+enet_train <- train(y ~ ., 
+                 data = reg_trn, method = "glmnet", trControl = control_net, tuneGrid = grid_net)
+```
+
+```{r}
+rmse(reg_trn$y, predict(enet_train, reg_trn))
+```
+
+Aber der Trainings-RMSE mit 1,8 ist auch eher schwach.
+***
+
+# Spam Filter [10 Punkte]
+
+```{r}
+spam_trn = read_csv("spam-trn.csv")
+spam_tst = read_csv("spam-tst.csv")
+```
+
+```{r}
+glimpse(spam_trn)
+```
+
+Im Spamdatensatz gibt es insgesamt 57 Inputfeatures, die alle numerisch sind. Die Outputvariable type ist ein 2 Level Faktor mit den Levels spam und nonspam.
+
+```{r}
+corr_mat_spam=cor(spam_trn[1:100,1:57],method="p")
+corrplot(corr_mat_spam)
+```
+Der Corrplot mit so vielen Inputfeatures ist leider recht unübersichtlich. Aber durch die doch einigen dunklen Felder, kann man erkennen, dass es doch einige Features gibt, die stark positiv miteinander korrelieren.
+
+```{r}
+table(spam_trn$type)
+```
+
+Die Outputvariable Type ist etwas unbalanciert. Von den Über 2300 Beobachtungen sind knapp 1400 als Nonspam deklariert. Hier werde ich ein Modell auf upgesampleten Daten fitten.
+
+```{r}
+set.seed(1910837262)
+
+up_train_spam <- upSample(x = spam_trn[, -ncol(spam_trn)],
+                     y = as.factor(spam_trn$type)) 
+```
+
+
+```{r}
+score = function(actual, predicted) {
+  1   * sum(predicted == "spam" & actual == "spam") +
+  -25 * sum(predicted == "spam" & actual == "nonspam") +
+  -1  * sum(predicted == "nonspam" & actual == "spam") +
+  2   * sum(predicted == "nonspam" & actual == "nonspam")
+}
+```
+
+```{r}
+control2 <- trainControl(method='repeatedcv', 
+                        number=5, 
+                        repeats=3)
+```
+
+
+```{r}
+
+gbm_spam <- train(type~., 
+                      data=spam_trn, 
+                      method='gbm', 
+                      metric='Accuracy', 
+                      trControl=control2)
+```
+
+```{r}
+table_spam <- table(spam_trn$type, predict(gbm_spam, spam_trn))
+confusionMatrix(table_spam)
+```
+
+Das GBM Modell kommt auf eine Traininsgaccuracy von 96 %.
+
+
+```{r}
+rf_spam_tuned <- train(type~., 
+                      data=spam_trn, 
+                      method='rf', 
+                      metric='Accuracy', 
+                      trControl=control,
+                    tuneGrid = tunegrid)
+```
+
+```{r}
+table_spam_rf_tuned <- table(spam_trn$type, predict(rf_spam_tuned, spam_trn))
+confusionMatrix(table_spam_rf_tuned)
+```
+
+Mit dem getunten RF komme ich auf eine Trainingsaccuracy von über 99 %.
+
+Und nun das Random Forest Modell mit dem Upgesampleten Trainingsdatensatz.
+
+```{r}
+rf_spam_up <- train(Class~., 
+                      data=up_train_spam, 
+                      method='rf', 
+                      metric='Accuracy', 
+                      trControl=control,
+                    tuneGrid = tunegrid)
+```
+
+
+```{r}
+table_spam_rf_up <- table(up_train_spam$Class, predict(rf_spam_up, up_train_spam))
+confusionMatrix(table_spam_rf_up)
+```
+
+Der getunte RF performt auf den upgesampleten Daten genau gleich gut, wie auf den normalen Daten.
+
+```{r}
+table_spam_rf <- table(spam_trn$type, predict(rf_spam_tuned, spam_trn))
+confusionMatrix(table_spam_rf)
+```
+
+
+```{r}
+# place code here that stores the test predictions that you submitted
+spam_pred <- predict(rf_spam_tuned, spam_tst)
+
+write.csv(x = tibble(Y = spam_pred), file = "spam_pred.csv")
+```
+
+Nun verusche ich mich noch mit einem Extreme Gradient Boosted Tree auf den upgesampleten Daten.
+
+```{r}
+grid <- expand.grid(nround = c(75,100),
+                    colsample_bytree = 1,
+                    min_child_weight = 1, 
+                    eta = c(0.01, 0.1, 0.3),
+                    gamma = c(0.5, 0.25),
+                    subsample = 0.5,
+                    max_depth = c(2, 3))
+
+cntrl <- trainControl(method = "cv",
+                      number = 5,
+                      verboseIter = TRUE,
+                      returnData = TRUE,
+                      returnResamp = "final")
+
+set.seed(1)
+train.xgb <- train(Class~., 
+                      data=up_train_spam, 
+                   trControl = cntrl,
+                   method = "xgbTree")
+train.xgb
+```
+
+```{r}
+table_spam_xgb <- table(up_train_spam$Class, predict(train.xgb, up_train_spam))
+confusionMatrix(table_spam_xgb)
+```
+
+Das XGB Modell kommt auch auf eine Accuracy von über 99,5 % auf Trainingsdaten.
+
+
+![Screenshot Leaderboard](Ranking.png)
+
+
+***
+
+# Abgabe
+
+## Erstellung der Abgabe CSV-Datei
+
+
+https://g4challenge.shinyapps.io/shiny-leaderboard/
+
+# Diskussion:
+Ich habe mich bei den Modellen für den Speeddurchgang für alles Random Forest Modelle entschieden. Da diese bei den Übungsblättern davor oftmals am besten performt haben. Weil das Random Forest Modell auf den Spamdaten sehr lange trainiert hat, habe ich mich dann kurzfristig für ein gbm entschieden.
+
+Danach habe ich mich verschiedene Modelle ausprobiert und die Trainingsscores und Testscores verglichen. Dabei ist mir aufgefallen, dass doch ein paar Modelle stark overfitten.
+Ich habe die Featureauswahl komplett ausgelassen und jeweils alle Features verwendet.
+
+Auf jeden Fall danke für die coole Idee und Organisation der Prediction Challenge.

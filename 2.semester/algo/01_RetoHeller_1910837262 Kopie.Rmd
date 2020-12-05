@@ -1,0 +1,440 @@
+---
+title: "Übung 1 - Recap"
+output: html_notebook
+Autor: Reto Heller "1910837262"
+---
+
+
+> Hofstadter’s Law: “It always takes longer than you expect, even when you take into account Hofstadter’s Law.”
+
+— **Douglas Hofstadter**, Gödel, Escher, Bach: An Eternal Golden Braid
+
+
+# Anmerkungen
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+Bitte um Beachtung der [Übungs-Policy](https://algo2-lab.netlify.com/%C3%BCbungs-policy.html) fÜr genaue Anweisungen und einige Beurteilungsnotizen. Fehler bei der Einhaltung ergeben Punktabzug.
+---
+
+Bei dieser Übung werden wir:
+
+-einen Datensatz partitionieren
+-ein KNN Modell aufstellen
+-Resampling anwenden
+-ein Logistisches Modell aufstellen
+-automatisches Tuning anwenden
+-Regression mit OLS durchführen
+-Modelle vergleichen
+
+Wichtig!
+Um Algorithmusname und Parameter auszuwaehlen, bediene dich der jeweiligen Paketanleitung.
+Installiere benoetigte Pakete selbst.
+Bediene dich R Hilfe bezÜglich Funktionen und dazugehoerigen Argumenten.
+
+# Teil 1 Regression
+
+## Die Daten
+
+
+---
+```{r}
+library(caret)
+library(dplyr)
+library(class)
+library(caret)
+```
+
+Importiere die Daten entweder mit der load Funktion oder via Environment
+
+```{r}
+
+#load("...../churn.RData")
+load("churn.RData")
+str(churn)
+```
+
+
+
+Die Daten enthalten 7032 Zeilen (Kunden) und 18 Spalten (Features). 
+Der bereinigte Datensatz stammt von der Kaggle Wetbewerb und enthält Informationen Über:
+- Kunden, die innerhalb des letzten Monats gegangen sind - die Spalte heisst Churn.
+- Dienste, fÜr die sich jeder Kunde angemeldet hat - Telefon, mehrere Leitungen, Internet, Online-Sicherheit, Online Backup, Geraeteschutz, technischer Support und Streaming von TV und Filmen.
+- Kundenkontoinformationen - wie lange sie schon Kunde sind, Vertrag, Zahlungsmethode, papierlose Rechnung, monatliche GebÜhren und Gesamtkosten.
+- Demografische Informationen Über Kunden - Geschlecht, Altersgruppe und ob sie Partner und Angehoerige haben.
+
+Die Spalte "Churn" ist unsere Zielvariable. Wir werden alle anderen Spalten als Praediktoren fÜr unseres Modell verwenden.
+
+1.) Datenaufbereitung
+
+In der Spalte "tenure" betraegt die minimale Vertragsdauer 1 Monat und die maximale 72 Monate, wir können die Werte in fünf Gruppen einteilen: “0–12 Month”, “12–24 Month”, “24–48 Months”, “48–60 Month”, “> 60 Month”.
+
+```{r, eval=F}
+min(churn$tenure); max(churn$tenure)
+```
+
+
+## Übung 1 (3 Punkte)
+Schreibe eine Funktion die numerische Werte der Variable "tenure" in eine neue Variable mit den obengenannten Auspraegungen umwandelt. 
+Formatiere neue Variable as factor. Überschriebe die "tenure"" Variable.
+
+
+```{r Gruppieren der Auspraegungen}
+churn['tenure_group'] <- 0
+churn$tenure_group[churn$tenure < 12] = "0–12 Month"
+churn$tenure_group[churn$tenure >= 12 & churn$tenure < 24 ] = "12–24 Month"
+churn$tenure_group[churn$tenure >= 24 & churn$tenure < 48 ] = "24–48 Month" 
+churn$tenure_group[churn$tenure >= 48 & churn$tenure < 60 ] = "48–60 Month" 
+churn$tenure_group[churn$tenure >= 60 ] = "> 60 Month"
+churn$tenure_group <- factor(churn$tenure_group) 
+```
+
+```{r}
+churn$tenure <- churn$tenure_group
+churn$tenure_group <- NULL
+```
+
+
+
+## Übung 2 (3 Punkte)
+Teile die Daten in Trainings- und Testsets auf. Berücksichtige ein 70:30 Verhältnis zwischen den Sets.
+
+```{r Datenpartitionierung}
+
+## 70% of the sample size
+smp_size <- floor(0.7 * nrow(churn))
+
+## set the seed to make your partition reproducible
+set.seed(123)
+train_ind <- sample(seq_len(nrow(churn)), size = smp_size)
+
+churn_train <- churn[train_ind, ]
+churn_test <- churn[-train_ind,]
+
+```
+
+
+
+## Übung 3 (3 Punkte)
+Stelle auf ein KNN Modell mit der Funktion Train. Wähle den richtigen Algorithmus dafür. 
+Prognostiziere Ergebnisse mit den Testdaten.
+Stelle auf eine Confusion Matrix (Funktion confusionMatrix) auf.
+
+```{r}
+churn_train_knn <- churn_train 
+churn_test_knn <- churn_train 
+
+
+
+churn_test_knn_x <- churn_test_knn %>%
+  select(-Churn)
+
+churn_train_knn <- na.omit(churn_train_knn)
+churn_test_knn <- na.omit(churn_test_knn)
+
+
+knn_x_trn <- churn_train_knn %>%
+  select(Contract, tenure,PaymentMethod)
+knn_x_tst <- churn_test_knn %>%
+  select(Contract, tenure, PaymentMethod)
+knn_y_trn <- churn_train_knn %>%
+  select(Churn)
+knn_y_tst <- churn_test_knn %>%
+  select(Churn)
+
+knn_x_trn$Contract <- as.numeric(knn_x_trn$Contract)
+knn_x_trn$tenure <- as.numeric(knn_x_trn$tenure)
+knn_x_trn$PaymentMethod <- as.numeric(knn_x_trn$PaymentMethod)
+knn_x_tst$Contract <- as.numeric(knn_x_tst$Contract)
+knn_x_tst$tenure <- as.numeric(knn_x_tst$tenure)
+knn_x_tst$PaymentMethod <- as.numeric(knn_x_tst$PaymentMethod)
+knn_y_trn$Churn <- as.numeric(knn_y_trn$Churn)
+knn_y_tst$Churn <- as.numeric(knn_y_trn$Churn)
+
+
+
+churn_knn = train(Churn ~ ., data = churn_train, 
+                   method = "knn", tuneLength = 10)
+```
+
+
+
+Prognostiziere Ergebnisse mit den Testdaten
+
+```{r}
+pred_knn <- predict(churn_knn, newdata = churn_test_knn)
+
+#knn_x_tst["Predict"] <- churn_knn
+#knn_x_tst$Predict <- as.factor(knn_x_tst$Predict)
+
+```
+
+
+
+Berechne Modell-Accuracy mit der Funktion confusionMatrix
+
+```{r}
+
+tab <- table(pred_knn, churn_test_knn$Churn)
+confusionMatrix(tab)
+
+# Die Accuracy liegt bei 79%. Die Speicificity ist mit nur knapp über 54% nicht so gut.
+```
+
+
+## Übung 4 (3 Punkte)
+Versuchen wir die KNN Schaetzung zu verbessern in dem wir Resampling anwenden:
+Vorhandene Resamplingmethoden sind  boot, boot632, cv, LOOCV, LGOCV, repeatedcv and oob. Default ist boot. LOOCV, LGOCV sind sehr rechenintensiv.
+Das Resampling wird mit der Funktion trainControl angewendet. 
+
+- Die Resamplingmethode soll repeated CV sein mit k=10 und repeats=3.
+Wende in der Funktion train auch die Datenskalierung mit dem Argument "preProcess" an.
+- Prognostiziere Ergebnisse mit den Testdaten.
+- Stelle auf eine Confusion Matrix (Funktion confusionMatrix) auf.
+
+```{r}
+knn_x_trn["Churn"] <- knn_y_tst$Churn
+
+preProcValues <- preProcess(x = knn_x_trn, method = c("center", "scale"), number = 10)
+
+ctrl <- trainControl(method="repeatedcv",repeats = 3) 
+knnFit <- train(as.factor(Churn) ~ ., data = churn_train_knn , method = "knn", trControl = ctrl, preProcess = c("center","scale"), tuneLength = 20)
+
+```
+
+Prognostiziere Ergebnisse mit den Testdaten
+
+```{r}
+knnPredict <- predict(knnFit,newdata = churn_test_knn_x)
+
+
+```
+
+Berechne Modell-Accuracy mit der Funktion confusionMatrix
+
+```{r}
+#confusionMatrix(as.factor(knnPredict), knn_y_tst$Churn)
+tab2 <- table(knnPredict, churn_test_knn$Churn)
+confusionMatrix(tab2)
+
+
+# Die Accuracy mit den preproccesden Daten liegt bei knapp über 80% und ist somit nur leicht besser als das Modell ohne diesen Schritt. Bei der Spezifität ist das Modell bei über 58%.
+```
+
+## Übung 5 (3 Punkte)
+Fitte jetzt ein logistisches Modell. 
+Wähle dazu den passenden Algorithmus.  
+Prognostiziere Ergebnisse mit den Testdaten.
+Stelle auf eine Confusion Matrix (Funktion confusionMatrix) auf.
+
+```{r Logistisches Modell Fitten}
+logistic_model <- glm(Churn ~ ., data = churn_train_knn, family = "binomial")
+summary(logistic_model)
+
+```
+
+Prognostiziere Ergebnisse mit den Testdaten
+
+```{r}
+
+
+```
+```{r}
+pred_log <- predict(logistic_model, churn_test_knn_x)
+prob_pred <- 1/(1+exp(-pred_log))
+summary(prob_pred)
+
+log_pred_classes = ifelse(prob_pred > 0.5, 2, 1)
+
+```
+
+
+Berechne Modell-Accuracy mit der Funktion confusionMatrix
+
+```{r}
+factor_churn_test <- ifelse(churn_test_knn$Churn == "Yes", 2, 1)
+tab_log <- table(log_pred_classes, factor_churn_test)
+confusionMatrix(tab_log)
+
+# Das logistische Regressionsmodell erreicht eine Accuracy von auch ca. 79%. DIe Specificty ist aber mit knapp 51 % a schwächsten vpn den 3 Modellen.
+
+```
+
+Welches Modell schneidet am besten ab?
+
+```{r}
+ue5 <- confusionMatrix(tab2)
+
+# Das KNN-Modell mit den vorverarbeiten Daten schneidet mit einer Accuracy von knap über 80% am besten ab.
+ue5$overall
+```
+
+
+-------------------
+
+# Teil 2 Klassifikation
+## Die Daten II
+Importiere Daten, Datensatz ist der Boston Housing Datensatz, für 504 Vororte in Boston, ihrem `medv`= median value of owner-occupied homes in \$1000s und 13 Prädiktoren.
+
+Der Datensatz beschreibt 13 numerische Eigenschaften von Häusern in Bostoner Vororten und befasst sich mit der Modellierung des Preises von Häusern in diesen Vororten in Tausenden von Dollar.
+
+Y Variable (Responsevariable) ist "medv" (median value)
+
+```{r}
+df = MASS::Boston
+glimpse(df)
+```
+
+## Übung 6 (3 Punkte)
+- Normalisere Daten mit der minmax Methode (sog feature scaling)
+
+```{r}
+ 
+preproc2 <- preProcess(df, method=c("range"))
+norm_df <- predict(preproc2, df)
+
+```
+
+- Partitioniere Daten in Training- und Testset mit einem Verhältnis von 70:30. Beachte die Reproduzierbarkeit.
+
+ 
+```{r}
+set.seed(123456)
+trainIndex <- createDataPartition(norm_df$crim , p = .7, 
+                                  list = FALSE, 
+                                  times = 1)
+bostonTrain <- norm_df[ trainIndex,]
+bostonTest  <- norm_df[-trainIndex,]
+
+```
+
+
+## Übung 7  (3 Punkte)
+- Führe das Training des Modells mit 1 Hidden Layer und 10 Neuronen NN aus (Argument hidden).
+Benutze für das Training die Funktion neuralnet.
+Beachte das Argument linear.output.
+
+ 
+```{r}
+library(neuralnet)
+formula_nn <- 
+nn_boston <- neuralnet(medv ~ ., data = bostonTrain, hidden= c(10) , linear.output = TRUE)
+
+
+```
+
+## Übung 8  (3 Punkte)
+- Visualisiere das Modell
+
+ 
+```{r}
+ plot(nn_boston, rep= "best")
+
+# Der Plot des Netzes zeigt die Weights der einzelnen Neuronen. Außerdem kann man sehr gut erkennen, dass es 13 Inputvariablen, 10 Hidden Nodes und einen Output gibt.
+```
+
+
+- Prognostiziere Ergebnisse mit dem Testset.
+
+ 
+```{r}
+boston_x_test <- bostonTest %>%
+  select(-medv)
+
+results <- compute(nn_boston, boston_x_test)
+predicted_nn <- results$net.result
+
+results <- data.frame(actual = bostonTest$medv, prediction = predicted_nn)
+
+results$prediction=results$prediction * abs(diff(range(df$medv))) + min(df$medv)
+results$actual=results$actual * abs(diff(range(df$medv))) + min(df$medv)
+
+```
+
+- Berechne MSE  
+Beachte, dass jetzt die prognostizierte Werte als auch Testwerte zuerst denormalisiert werden müssen. Dh die vorherige Normalisierung muss jetzt rückwärts berechnet werden.
+
+
+ 
+```{r}
+results["Diff_Squared"] <- abs(results$actual - results$prediction) ** 2
+
+MSE <- mean(results$Diff_Squared)
+
+```
+
+- Generiere jetzt ein anderes Traingset und ein anderes Testset mit den vorhin generierten Indizes, aber diesmal mit originalen, nicht-normalisierten Daten. 
+ 
+```{r}
+Train_df <- df[ trainIndex,]
+Test_df  <- norm_df[-trainIndex,]
+ 
+
+```
+
+## Übung 9 (3 Punkte)
+- OLS Modell Stelle ein OLS Rgeressionsmodell auf und führe Summary des Modells aus.  
+ 
+```{r}
+
+lm_model <- lm(medv ~ ., data = Train_df)
+
+summary(lm_model)
+# Beim OLS Modell erkennt man, dass bis auf 3 Variablen alle eine statistische Signifikanz aufweisen. EInzig die Variablen indus, chas und age haben einen P Value von über 0.05.
+
+```
+
+- Prognostiziere Ergebnisse des OLS Modells mit dem Testset. (Funktion predict) 
+ 
+```{r}
+preds_train_OLS <- predict(lm_model)
+preds_OLS <- predict(lm_model, Test_df)
+
+```
+
+
+- Berechne MSE für das OLS Modell 
+ 
+```{r}
+#results["Predict_Train_OLS"] <- preds_train_OLS
+results["Predict_OLS"] <- preds_OLS
+results["Diff_Squared_OLS"] <- abs(results$actual - results$Predict_OLS) ** 2
+MSE_OLS <- mean(results$Diff_Squared_OLS)
+
+```
+
+## Übung 10 (3 Punkte)
+Vergleiche NN MSE und OLS MSE.  
+ 
+```{r}
+# Das Neuronale Netz schneidet hierbei deutlich besser ab. 
+MSE
+
+MSE_OLS
+
+```
+
+
+- Visualisiere die Modelle  
+ 
+```{r}
+ 
+library(ggplot2)
+
+
+#Plot Result Neural Network und OLS.
+
+ggplot(results, aes(x = prediction, y = actual)) + geom_point() + stat_smooth()
+
+# Der Plot zeigt eine fast gerade Linie, durch die Punkte. Ein perfekter Ergebnis wäre eine Gerade, aber das Ergebnis des NN ist nicht schlecht.
+```
+
+```{r}
+ggplot(results, aes(x = Predict_OLS, y = actual)) + geom_point() + stat_smooth()
+
+# Das OLS Modell liefert nicht so gute Ergebnisse wie das NN, das sieht man deutlich an der Kurve im Plot.
+```
+
+
+

@@ -1,0 +1,439 @@
+---
+title: "Übung 03"
+author: "Reto Heller 1910837262"
+date: 'Bis: Sonntag, 14.06.2019'
+output:
+  html_document:
+    df_print: paged
+urlcolor: cyan
+---
+
+```{r options, include = FALSE}
+knitr::opts_chunk$set(fig.align = "center")
+```
+
+Bitte um Beachtung der [Übungs-Policy](https://algo2-lab.netlify.com/%C3%BCbungs-policy.html) für genaue Anweisungen und einige Beurteilungsnotizen. Fehler bei der Einhaltung ergeben Punktabzug.
+
+Angedachte Bearbeitungszeit: ca. 4 Std.
+
+***
+
+# Aufgabe 1 (Computation Time)
+
+**[8 points]** Für diese Übung werden wir Daten mittels Simulation erstellen und dann beurteilen, wie gut bestimmte Methoden funktionieren. Verwenden Sie den folgenden Code, um ein Trainings- und Testdatensatz zu erstellen.
+
+```{r, message = FALSE, warning = FALSE}
+library(caret)
+library(mlbench)
+library(ggplot2)
+library(kableExtra)
+library(randomForest)
+set.seed(42)
+sim_trn = mlbench.spirals(n = 2500, cycles = 1.5, sd = 0.125)
+sim_trn = data.frame(sim_trn$x, class = as.factor(sim_trn$classes)) #%>% tibble()
+sim_tst = mlbench.spirals(n = 10000, cycles = 1.5, sd = 0.125)
+sim_tst = data.frame(sim_tst$x, class = as.factor(sim_tst$classes)) #%>% tibble()
+```
+
+Die Trainingsdaten sind unten dargestellt, wobei die Farben die Variable "Klasse" = Response sind.
+
+```{r, fig.height = 5, fig.width = 5, echo = FALSE}
+ggplot(sim_trn, aes(x=X1, y=X2, col=class))+geom_point()
+```
+
+Bevor Sie fortfahren, stelle einen Seed ein, der deiner StudentenID entspricht.
+
+```{r}
+uin = 1910837262
+set.seed(uin)
+```
+
+Wir werden das Folgende verwenden, um eine 5-fache Kreuzvalidierung für die Verwendung mit `train()` von `caret` zu definieren.
+
+```{r, message = FALSE, warning = FALSE}
+library(caret)
+cv_5 = trainControl(method = "cv", number = 5)
+
+# tidymodels
+library(tidymodels)
+rec_cv_5 = vfold_cv(sim_trn, v=5)
+```
+
+Wir tunen nun zwei Modelle mit `train()`. Zuerst eine logistische Regression mit `glm`. (Dies ist eigentlich nicht "getunt", da es keine zu tunenden Parameter gibt, aber wir verwenden `train()`, um eine Kreuzvalidierung durchzuführen.) Zweitens tunen wir einen einzelnen Entscheidungsbaum mit `rpart`.
+
+Wir speichern die Ergebnisse in `sim_glm_cv` bzw. `sim_tree_cv`, aber wir verpacken auch beide Funktionsaufrufe mit `system.time()`, um aufzuzeichnen, wie lange der Tuning-Prozess für jede Methode dauert.
+
+```{r, message = FALSE, warning = FALSE}
+glm_cv_time = system.time({
+  sim_glm_cv  = train(
+    class ~ .,
+    data = sim_trn,
+    trControl = cv_5,
+    method = "glm")
+})
+
+tree_cv_time = system.time({
+  sim_tree_cv = train(
+    class ~ .,
+    data = sim_trn,
+    trControl = cv_5,
+    method = "rpart")
+})
+
+# Tidymodels (optional)
+
+glm_cv_tidy = system.time({
+  # recipe
+  # train
+})
+
+tree_cv_tidy = system.time({
+  # recipe
+  # train
+})
+
+```
+
+Wir sehen, dass beide Methoden durch Cross-Validierung in ähnlicher Zeit optimiert werden.
+
+```{r}
+glm_cv_time["elapsed"]
+tree_cv_time["elapsed"]
+```
+
+```{r, message = FALSE, warning = FALSE, echio = FALSE}
+library(rpart.plot)
+rpart.plot(sim_tree_cv$finalModel)
+```
+
+Wiederholen Sie die obige Analyse mit einem Random Forest, zweimal. Verwenden Sie beim ersten Mal die 5-fache Kreuzvalidierung. Beim zweiten Mal optimieren wir das Modell mit OOB-Samples. Wir haben hier nur zwei Prädiktoren, also verwenden Sie für beide das folgende Tuning-Grid.
+
+```{r}
+rf_grid = expand.grid(mtry = c(1, 2))
+rf_tidy = rand_forest(mtry=tune()) %>% 
+  set_mode("classification") %>% 
+  set_engine("randomForest")
+
+rf_cv_time = system.time({
+  sim_rf_cv = train(
+    class ~ .,
+    data = sim_trn,
+    trControl = cv_5,
+    method = "rf",
+    tuneGrid = rf_grid)
+})
+
+
+rf_ctrl <- trainControl(method = "oob", number = 5)
+
+rf_oob_time = system.time({
+  sim_rf_oob = train(
+    class ~ .,
+    data = sim_trn,
+    trControl = rf_ctrl,
+    method = "rf",
+    tuneGrid = rf_grid)
+})
+
+#rf_tidy %>% tune_grid()
+```
+
+Erstellen Sie eine Tabelle, in der die Ergebnisse dieser vier Modelle zusammengefasst sind. (Logistik mit CV, Baum mit CV, RF mit OOB, RF mit CV). Berichte:
+
+- Gewählter Wert des Tuning-Parameters (falls zutreffend)
+- Verstrichene Abstimmzeit
+- Resampled (CV oder OOB) Genauigkeit
+- Testgenauigkeit
+
+```{r}
+#Test Predictions berechnen:
+pred_glm <- predict(sim_glm_cv, sim_tst)
+pred_tree <- predict(sim_tree_cv, sim_tst)
+pred_rf_cv <- predict(sim_rf_cv, sim_tst)
+pred_rf_oob <- predict(sim_rf_oob, sim_tst)
+
+#Test Accuracies berechnen:
+conf_test_glm <- confusionMatrix(pred_glm, sim_tst$class)
+conf_test_tree <- confusionMatrix(pred_tree, sim_tst$class)
+conf_test_rf_cv <- confusionMatrix(pred_rf_cv, sim_tst$class)
+conf_test_rf_oob <- confusionMatrix(pred_rf_oob, sim_tst$class)
+```
+
+
+```{r}
+#result_1 <- tribble(~model, ~parameter, ~training_time, ~resampled_accuracy, ~test_accuracy) # TODO fill the results (will be tested)
+
+models <- c("GLM", "DecisionTree", "RandomForest", "RandomForest")
+paramaters <- c("none", "cp", "mtry", "mtry")
+time <- as.numeric(c(glm_cv_time["elapsed"], tree_cv_time["elapsed"], rf_cv_time["elapsed"], rf_oob_time["elapsed"]))
+resample_acc <- as.numeric(c(sim_glm_cv$results[2], max(sim_tree_cv$results), max(sim_rf_cv$results[2]), max(sim_rf_oob$results[2])))
+
+test_acc <- as.numeric(c(conf_test_glm$overall[1], conf_test_tree$overall[1], conf_test_rf_cv$overall[1], conf_test_rf_oob$overall[1]))
+
+#result_1$model <- models
+#result_1$parameter <- paramaters
+#result_1$training_time <- time
+#result_1$resampled_accuracy <- resample_acc
+#result_1$test_accuracy <- test_acc
+
+result_1 = data.frame(
+  "model" = models,
+  "parameter" = paramaters,
+  "training_time" = time,
+  "resampled_accuracy" = resample_acc,
+  "test_accuracy" = test_acc
+)
+
+kable_styling(kable(result_1, format = "html", digits = 4), full_width = FALSE)
+
+```
+
+
+
+# Aufgabe 2 (Predicting Baseball Salaries)
+
+**[7 points]** Für diese Frage werden wir das `Gehalt` von `Hitters` vorhersagen. (`Hitters` ist auch der Name des Datensatzes.) Wir entfernen zuerst die fehlenden Daten:
+
+```{r}
+library(ISLR)
+library(gbm)
+library(glmnet)
+
+Hitters = na.omit(Hitters)
+```
+
+Nachdem du `uin` auf Ihre StudentID umgestellt hast, verwende den folgenden Code, um die Daten aufzuteilen.
+
+```{r}
+uin = 1910837262
+set.seed(uin)
+hit_split = initial_split(Hitters, p = 0.6, list = FALSE)
+hit_trn = hit_split %>% training()
+hit_tst = hit_split %>% testing()
+```
+
+Gehen wie folgt vor:
+
+- Tunen Sie ein verstärktes Baummodell mit dem folgenden Tuning-Grid und der 5-fachen Kreuzvalidierung.
+
+```{r}
+gbm_grid = expand.grid(interaction.depth = c(1, 2),
+                       n.trees = c(500, 1000, 1500),
+                       shrinkage = c(0.001, 0.01, 0.1),
+                       n.minobsinnode = 10)
+
+oob  = trainControl(method = "oob")
+```
+
+- Tunen Sie einen Random Forest mit OOB Resampling und **allen** möglichen Werte von `mtry`. 
+
+```{r}
+hit_gbm = train(Salary ~ ., data = hit_trn,
+                method = "gbm",
+                trControl = cv_5,
+                verbose = FALSE,
+                tuneGrid = gbm_grid)
+
+rf_grid = rf_grid = expand.grid(mtry = 1:(ncol(hit_trn) - 1))
+#random forest
+hit_rf  = train(Salary ~ ., data = hit_trn,
+                method = "rf",
+                trControl = oob,
+                tuneGrid = rf_grid)
+
+# bagged model
+hit_bag = train(Salary ~ ., data = hit_trn,
+                method = "rf",
+                trControl = oob,
+                tuneGrid = data.frame(mtry = (ncol(hit_trn) - 1)))
+
+
+```
+
+
+```{r}
+#Plots der Modelle Random Forest
+plot(hit_rf)
+# Der RMSE beim Randomforest ist bei mtry = 10 am geringsten.
+```
+
+```{r}
+#Plots der Modelle Boosted
+plot(hit_gbm)
+# Das beste boosted Modell ist mit einer Baumanzahl von 1000, einer Tiefe von 1 und einer Schrinkage von 0,1. So kommt man auf einen Trainings RMSE von knapp mehr als 300.
+```
+
+
+
+Erstellen Sie eine Tabelle, in der die Ergebnisse von drei Modellen zusammengefasst sind:
+
+- Tuned boosted tree Model
+- Tuned random forest Model
+- Bagged tree Model
+
+Für jedes, Berichte:
+
+- Resampled RMSE
+- Test RMSE
+
+```{r}
+
+calc_rmse = function(actual, predicted) {
+  sqrt(mean((actual - predicted) ^ 2))
+}
+
+gbm_tst_rmse = calc_rmse(predicted = predict(hit_gbm, hit_tst),
+                         actual    = hit_tst$Salary)
+
+rf_tst_rmse = calc_rmse(predicted = predict(hit_rf, hit_tst),
+                        actual    = hit_tst$Salary)
+
+bag_tst_rmse = calc_rmse(predicted = predict(hit_bag, hit_tst),
+                         actual    = hit_tst$Salary)
+
+
+result_2 = data.frame(
+  c("Boosting", "Random Forest", "Bagging"),
+  c(min(hit_gbm$results$RMSE), min(hit_rf$results$RMSE), min(hit_bag$results$RMSE)),
+  c(gbm_tst_rmse, rf_tst_rmse, bag_tst_rmse)
+)
+colnames(result_2) = c("Method", "Resampled RMSE", "Test RMSE")
+kable_styling(kable(result_2, format = "html", digits = 4), full_width = FALSE)
+
+```
+
+
+
+```{r}
+#Das Random Forest Modell hat sowohl den geringsten Test als auch den geringsten Trainings RMSE. Auffällig ist nur, dass der Testfehler jeweils geringer als der Trainingsfehler ist bei allen Modellen.
+```
+
+
+
+# Aufgabe 3 (Transforming der Response)
+
+**[5 points]** Dann fahren wir mit den Daten aus Übung 2 fort. Das Buch, ISL, schlägt vor, die Response "Salary", log-transformieren, bevor es in einen Random Forest passt. Ist das notwendig? Tunen Sie einen Random Forest neu, wie Sie es in Übung 2 getan haben, außer mit einer logarithmisch transformierten Response. Berichten Sie den Test RMSE sowohl für das nicht transformierte als auch für das transformierte Modell im Originalmaßstab der Antwortvariablen. 
+
+```{r, echo = FALSE}
+ggplot(hit_trn, aes(x=Salary))+geom_histogram(binwidth = 250)
+```
+
+```{r}
+library(metR)
+hit_trn_log <- hit_trn
+hit_trn_log$Salary <- log1p(hit_trn_log$Salary )
+
+
+
+hit_rf_log  = train(Salary ~ ., data = hit_trn_log,
+                method = "rf",
+                trControl = oob,
+                tuneGrid = rf_grid)
+pred_rf_log <- predict(hit_rf_log, hit_tst)
+pred_rf_log <- expm1(hit_trn_log$Salary)
+rf_tst_rmse_log = calc_rmse(predicted = predict(hit_rf_log, hit_tst),
+                        actual    = hit_tst$Salary)
+
+
+result_3 = data.frame(
+  c("Random Forest", "Random Forest LogTransformed"),
+  c(rf_tst_rmse, rf_tst_rmse_log)
+)
+colnames(result_3) = c("Method", "Test RMSE")
+kable_styling(kable(result_3, format = "html", digits = 4), full_width = FALSE)
+```
+
+```{r}
+# Der Test RMSE vom log transformierten Modell ist deutlich höher als der vom Base Modell. Somit hat die Transformation nicht wirklich etwas gebracht.
+```
+
+
+# Aufgabe 4 (Concept Checks)
+
+**[1 point each]** Beantworte die folgenden Fragen auf der Grundlage deiner Ergebnisse aus den drei Übungen. 
+
+### Timing
+
+**(a)** Vergleichen Sie die Zeit, die für die Abstimmung der einzelnen Modelle benötigt wird. Ist der Unterschied zwischen dem OOB- und dem CV-Ergebnis für den Random Forest ähnlich, wie Sie es erwartet hätten?
+
+```{r}
+rf_cv_time["elapsed"]
+rf_oob_time["elapsed"]
+
+# Das CV Modell braucht dreimal solang wie das OOB Modell. Das kann vermutlich an den 5 Wiederholungen liegen.
+
+```
+
+
+**(b)** Vergleiche den getunten Wert von `mtry` für jeden der getunten Random Forests. Wählen sie das gleiche Modell?
+
+```{r}
+# In dem Beispiel unterscheiden sich die Mtry Werte fast gar nicht. Bei einem anderen Beispiel wird der Unterschied vermutlich größer sein.
+```
+
+
+**(c)** Vergleichen Sie die Testgenauigkeit der vier betrachteten Verfahren. Erläutere diese Ergebnisse kurz.
+
+```{r}
+# Die logistische Regression performt am schlechtesten. Das war zu erwarten da eine Nicht-Linearität notwendig ist, um besser zu klassifizieren. Der Decision Tree ist aber auch nur leicht besser, dies könnte mit der geringen Tiefe zusammenhängen.
+# Die beiden Random Forest Modelle schneiden deutlich besser ab. Die beiden Modelle sind sehr ähnlich und lösen die Nicht Linerarität am besten mit einer Accuracy von 84 %.
+```
+
+
+### Salary
+
+**(d)** Berichte den eingestellten Wert von `mtry` für den Random Forest.
+
+```{r}
+hit_rf$bestTune
+
+# Der Wert liegt bei 3.
+```
+
+
+**(e)** Erzeuge einen Plot, der die Tuningergebnisse für das Tuning des boosted tree model anzeigt.
+
+```{r}
+plot(hit_gbm)
+#Bei einer Shrinkage von 0,1 steigt der RMSE mit der Anzahl der Iterationen. Bei einer Shrinkage von 0,001 sinkt er hingegen stark spürbar. Bei einer Shrinkage von 0,01 ist der RMSE gleich zu Beginn sehr niedrig, aber verbessert sich dann auch nicht mehr stark.
+```
+
+
+**(f)** Erzeuge einen Plot der Variable Importance für den tuned Random Forest.
+
+```{r}
+varImpPlot(hit_rf$finalModel, main = "Variable Importance, Random Forest")
+```
+
+
+**(g)** Erzeuge einen Plot der Variable Importance für das tuned Boosted Tree Model.
+
+```{r}
+plot(varImp(hit_gbm), main = "Variable Importance, Boosting")
+```
+
+
+**(h)** Nach dem Random Forest, was sind die drei wichtigsten Prädiktoren?
+
+```{r}
+# Die wichtigsten Prädiktoren sind CRBI, CHits und CAtBat.
+importance(hit_rf$finalModel)
+
+```
+
+
+**(i)** Nach dem Boosted Model, was sind die drei wichtigsten Prädiktoren?
+
+```{r}
+# Beim boosted Modell sind es CRBI, CmHmRn und PutOuts.
+```
+
+
+### Transformation
+
+**(j)** Basierend auf diesen Ergebnissen, glauben Sie, dass die Transformation notwendig war?
+
+```{r}
+# Da der RMSE deutlich höher wurde durch die Transformation, war es nicht notwendig, die Response Varaiable zu logtransformieren.
+```
+

@@ -1,0 +1,273 @@
+---
+title: "Statistische Experimente und Signifikanz-Tests"
+author: "Lukas Huber"
+date: '2019-01-01 (updated: `r Sys.Date()`)'
+subtitle: Algorithmik und Statistik 1
+institute: Reto Heller 1910837262
+---
+
+Bitte um Beachtung der [Übungs-Policy](https://weblearn.fh-kufstein.ac.at/mod/page/view.php?id=64482) für genaue Anweisungen und einige Beurteilungsnotizen. Fehler bei der Einhaltung ergeben Punktabzug.
+
+```{r setup}
+library(tidyverse)
+```
+
+
+
+# Aufgabe 1: Einseitiger z-Test [5 Punkte]
+Wir wissen, dass Hypothesentests in verschiedenen Formen möglich sind. In dieser Übung implementieren Sie einen einteiligen z-Test auf Testdaten aus der Verfolgung der Konvertierung in einer mobilen Anwendung.
+
+Die Treatmentgruppe stellt eine grafische Änderung dar, von der wir erwarten, dass sie die Konversionsrate der Benutzer verbessert. Führen Sie einen Test mit alpha als .05 durch und finden Sie heraus, ob die Änderung tatsächlich geholfen hat.
+
+## Anweisungen
+- Weisen Sie den mittleren Konversionskurs für jede Gruppe mit der Funktion `group_by()` in der Spalte Group zu und geben Sie ihn aus.
+- Ordnen Sie die Anzahl der Steuerungskonvertierungen `num_control` und die Gesamtzahl der Versuche der Variablen `total_control` zu, indem Sie den DataFrame "schneiden".
+- Ebenso weisen Sie der Treatmentgruppe die gleichen Werte zu, indem Sie den Datenrahmen "aufschneiden". 
+- Führen Sie den z-Test mit der Funktion prop.test() aus.
+- Interpretieren Sie die Ergebnisse
+
+```{r}
+#statistics4ds::ab_test %>% head()
+ab_test <- statistics4ds::ab_test
+
+summary_abtest <- ab_test %>%
+  group_by(group) %>%
+  summarise(mean = mean(converted),
+  n = n(),
+  positives = sum(converted))
+
+summary_abtest
+
+num_control <- summary_abtest$n[1]
+  
+total_control <- summary_abtest$positives[1]
+
+
+num_treat <- summary_abtest$n[2]
+total_treat <- summary_abtest$positives[2]
+x<- summary_abtest$positives
+n<- summary_abtest$n
+
+prop.test(x, n, alternative="greater")
+
+#Da der p-Value größer als 0,05 ist, ist es statistisch singnifikant.
+
+```
+
+
+
+# Aufgabe 2: Zweiseitiger t-Test [4 Punkte]
+In dieser Übung werden Sie eine andere Art von Hypothesentest mit den beiden beschränkten t-Tests für Mittel behandeln. Konkret werden Sie den Test mit unserem Laptops-Datensatz von früher durchführen und versuchen, einen signifikanten Preisunterschied zwischen Asus und Toshiba zu identifizieren.
+
+Sobald Sie Ihr Ergebnis erhalten haben, vergessen Sie nicht, eine verwertbare Schlussfolgerung zu ziehen.
+
+## Anweisungen
+
+- Weisen Sie den Durchschnittspreis für jede Gruppe mit der `group_by()`-Funktion zu und geben Sie ihn aus.
+- Ordnen Sie die Preise jeder Gruppe ihrer jeweiligen Variablen zu.
+- Führen Sie den t-Test durch und geben Sie die Ergebnisse aus. 
+- Was ist Ihre Schlussfolgerung?
+
+
+```{r warning=FALSE}
+library(readr)
+laptops <- read_csv("data/laptops.csv")
+
+laptops_grouped <-  laptops %>%
+  group_by(Company) %>%
+  summarise(mean = mean(Price_euros)) %>%
+  filter(Company == "Asus" | Company == "Toshiba")
+
+mean_Toshiba <- laptops_grouped %>%
+  filter(Company == "Toshiba") %>%
+  pull(mean)
+
+mean_Asus <- laptops_grouped %>%
+  filter(Company == "Asus") %>%
+  pull(mean)
+
+# Der Durschnittspreis von Toshiba ist höher als der Durchschnittspreis von Asus. Die Differenz von 160 € ist schon deutlich.
+
+Prices_Toshiba <- laptops %>%
+  filter(Company == "Toshiba") %>%
+  pull(Price_euros)
+
+Prices_Asus <- laptops %>%
+  filter(Company == "Asus") %>%
+  pull(Price_euros)
+
+t.test(x = Prices_Toshiba, y = Prices_Asus, alternative = "two.sided", var.equal = T )
+
+#Da wir hier einen zwei-seitigen Test machen und der p_value größer als der alpha-value ist, können wir sagen dass die Preise von Toshiba und Asus nicht gleich sind.
+
+```
+
+
+
+# Aufgabe 3: Berechnung des Stichprobenumfangs [4 Punkte]
+Wir führen eine Power-Analyse  durch, um den benötigten Stichprobenumfang zu ermitteln. Die Power-Analyse  umfasst vier bewegliche Teile:
+
+- Stichprobenumfang
+- Effektgröße
+- Minimaler Effekt
+- Power/Signifikanz
+In dieser Übung arbeiten Sie mit einer Website und möchten auf einen Unterschied in der Konversionsrate testen. Bevor Sie mit dem Experiment beginnen, müssen Sie entscheiden, wie viele Proben Sie pro Variante mit 5% Signifikanz und 95% Power benötigen.
+
+## Anweisungen
+- Standardisierung des Effekts einer Erhöhung der Konversionsrate von 20% auf 25% Erfolg. 
+- Berechnen und geben Sie den benötigten Stichprobenumfang aus.
+- Passen Sie Ihren Code an, um die benötigte Stichprobengröße mit 80% Power zu lösen; 
+- Begründen Sie, was passiert.
+
+```{r}
+library(pwr)
+h <- ES.h(0.2, 0.25)
+h
+
+
+pwr.p.test(h = h, power = 0.95, sig.level = 0.05, alternative = "two.sided")
+
+pwr.p.test(h = h, power = 0.8, alternative = "two.sided")
+
+#Je sicherer du dir mit deiner Aussage sein willst, desto größer muss der Stichprobenumfang sein.
+
+#pwr.*.test() # What is *
+```
+
+
+
+
+# Aufgabe 4: Visualisierung der Beziehung [3 Punkte]
+Nachdem wir nun die Auswirkungen auf bestimmte Fehler untersucht und die notwendige Stichprobengröße für verschiedene Power-Werte berechnet haben, lassen Sie uns einen Schritt zurückgehen und das Verhältnis zwischen Power und Stichprobengröße mit einem nützlichen Diagramm betrachten.
+
+In dieser Übung schalten wir das Getriebe und schauen uns einen t-Test und nicht einen z-Test an. Um dies zu visualisieren, verwenden Sie die Funktion `pwr.plot()`, die die Stichprobengröße auf der x-Achse mit der Leistung auf der y-Achse und verschiedene Linien mit unterschiedlichen Mindesteffektgrößen anzeigt.
+
+## Anweisungen
+- Visualisieren Sie das Verhältnis zwischen Leistung und Stichprobenumfang mit der Funktion pwr.plot() mit den entsprechenden Parameterwerten; 
+- was fällt Ihnen auf? Beschreiben Sie Ihre Schlussfolgerungen
+
+```{r}
+library(pwr2)
+sample_sizes = seq(5, 100)
+effect_sizes = c(0.2, 0.5, 0.8)
+
+pwr.plot(n = sample_sizes, k = 5, f = effect_sizes[1], alpha = 0.05)
+
+
+
+```
+
+```{r}
+pwr.plot(n = sample_sizes, k = 5, f = effect_sizes[2], alpha = 0.05)
+
+```
+
+```{r}
+pwr.plot(n = sample_sizes, k = 5, f = effect_sizes[3], alpha = 0.05)
+```
+```{r}
+#Je größer die Effekt-Size wird, desto kleiner kann das Sample sein, um eine hohe Power(Aussagekraft) zu erhalten.
+```
+
+
+# Aufgabe 5: Multiples Testen [4 Punkte]
+
+## Berechnung der Fehlerraten
+Wir haben ein wenig über das Problem der Multiples Testen in den Folien gesprochen, aber lassen Sie uns die Dinge einen Schritt weiter gehen. In dieser Übung werden Sie untersuchen, wie sich das Phänomen auf die Fehlerquote auswirkt.
+
+Ihr Kollege erwägt dringend, 60 verschiedene Hypothesentests durchzuführen. Um sie vom Gegenteil zu überzeugen, berechnen Sie die Wahrscheinlichkeit eines Typ-I-Fehlers für 60 Hypothesentests mit einem Signifikanzniveau von 5%.
+
+## Anweisungen
+- Berechnen und geben Sie die Wahrscheinlichkeit an, dass Ihr Kollege einen Typ-I-Fehler erhält.
+- Sie haben sie erfolgreich auf 30 Tests reduziert; passen Sie Ihren Code an, um die neue Fehlerquote zu berechnen und auszugeben.
+- Letzter Versuch mit 10 Tests
+- Beschreiben Sie Ihre Schlussfolgerungen
+
+```{r}
+# Print error rate for 60 tests with 5% significance
+error_rate_60 <- 1-(0.95**60)
+error_rate_60
+# Print error rate for 30 tests with 5% significance
+error_rate_30 <- 1-(0.95**30)
+error_rate_30
+# Print error rate for 10 tests with 5% significance
+error_rate_10 <- 1-(0.95**10)
+error_rate_10
+```
+
+
+
+
+# Aufgabe 6: Bonferroni-Korrektur [4 Punkte]
+Lassen Sie uns mehrere Hypothesentests mit dem Bonferroni-Korrekturansatz durchführen, den wir in den Folien diskutiert haben. Sie verwenden die  `p.adjust()` Funktion, um dies zu erreichen.
+
+Verwenden Sie einen Single-Test Signifikanzlevel von .05 und beobachten Sie, wie sich die Bonferroni-Korrektur auf unsere Stichprobenliste der bereits erstellten p-Werte auswirkt.
+
+## Anweisungen
+- Berechnen Sie eine Liste der von Bonferroni eingestellten p-Werte mit Hilfe der p.adjust() Funktion.
+- Geben Sie die Ergebnisse der mehreren Hypothesentests an
+- Geben Sie die p-Werte selbst an
+
+```{r}
+pvals = c(.01, .05, .10, .50, .99)
+
+bonferroni_pvals <- p.adjust(pvals, method = "bonferroni", n = length(pvals))
+bonferroni_pvals
+
+multi_bonferroni <- p.adjust(c(0.95**60, 0.95**30, 0.95**10), method = "bonferroni")
+multi_bonferroni
+
+my_pvals <- c(0.5, 0.05, 0.005, 0.0005)
+my_pvals_adjust <- p.adjust(p = my_pvals, method = "bonferroni")
+
+my_pvals_adjust
+
+#Durch die Bonferroni Korrektur werden die p-values sehr konservativ angepasst, dadruch erhöht sich die Wahrscheinlichkeit, dass man falsch-negative Ergebnisse erhält. Dies kann man auch hier sehr schön sehen, da der originale p-Wert von 0,5 durch die Bonferroni Korrektur zu 1,0 wird.
+
+
+```
+
+
+
+# Aufgabe 7: ANOVA [6 Punkte]
+
+## Anweisungen
+- Kontrolliere die Daten, stelle die Gruppen als Boxplot dar
+- Berechne den One-Way ANOVA test
+- Interpretiere das Ergebnis
+- Führe Tukey multiple pairwise-comparisons durch
+- Interpretiere das Tukey Ergebnis
+- Überprüfe die ANOVA-Annahmen
+
+```{r}
+PlantGrowth %>% head()
+# Boxplot
+ggplot(data = PlantGrowth, mapping = aes(x = group, y = weight))+
+  geom_boxplot()
+# Compute the analysis of variance
+library(lmPerm)
+pg_aov <- aov(formula = weight ~ group, data = PlantGrowth)
+
+# Summary of the analysis
+summary(pg_aov)
+# Tukey multiple pairwise-comparisons
+TukeyHSD(pg_aov)
+# Nur der Unterschied zwischen trt1 und trt2 ist statistisch relevant mit einem p-value von 0,012
+# 1. Homogeneity of variances
+plot(pg_aov, 1)
+library(car)
+leveneTest(weight ~ group, data = PlantGrowth)
+#Da der p-values nicht geringer als 0,05 ist, können wir eine Homogenität zwischen den Behandlungsmethoden annehmen.
+# 2. Normality
+plot(pg_aov, 2)
+aov_residuals <- residuals(object = pg_aov)
+shapiro.test(x = aov_residuals)
+#Wir können Normalität bei den Daten annehmen.
+```
+
+
+
+
+
+
+

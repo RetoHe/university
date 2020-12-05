@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+
+<html  dir="ltr" lang="de" xml:lang="de">
+<head>
+    <title>DSIA.bbM.19.WS19 ALG 27257 - 1: 03 R bootstrap tutorial</title>
+    <link rel="shortcut icon" href="https://weblearn.fh-kufstein.ac.at/theme/image.php/fhkufstein/theme/1569507974/favicon" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="keywords" content="moodle, DSIA.bbM.19.WS19 ALG 27257 - 1: 03 R bootstrap tutorial" />
+<link rel="stylesheet" type="text/css" href="https://weblearn.fh-kufstein.ac.at/theme/yui_combo.php?rollup/3.17.2/yui-moodlesimple-min.css" /><script id="firstthemesheet" type="text/css">/** Required in order to fix style inclusion problems in IE with YUI **/</script><link rel="stylesheet" type="text/css" href="https://weblearn.fh-kufstein.ac.at/theme/styles.php/fhkufstein/1569507974_1569508088/all" />
+<script type="text/javascript">
+//<![CDATA[
+var M = {}; M.yui = {};
+M.pageloadstarttime = new Date();
+M.cfg = {"wwwroot":"https:\/\/weblearn.fh-kufstein.ac.at","sesskey":"YLMNWCjQKJ","themerev":"1569507974","slasharguments":1,"theme":"fhkufstein","iconsystemmodule":"core\/icon_system_fontawesome","jsrev":"1569507974","admin":"admin","svgicons":true,"usertimezone":"Europa\/Wien","contextid":125118};var yui1ConfigFn = function(me) {if(/-skin|reset|fonts|grids|base/.test(me.name)){me.type='css';me.path=me.path.replace(/\.js/,'.css');me.path=me.path.replace(/\/yui2-skin/,'/assets/skins/sam/yui2-skin')}};
+var yui2ConfigFn = function(me) {var parts=me.name.replace(/^moodle-/,'').split('-'),component=parts.shift(),module=parts[0],min='-min';if(/-(skin|core)$/.test(me.name)){parts.pop();me.type='css';min=''}
+if(module){var filename=parts.join('-');me.path=component+'/'+module+'/'+filename+min+'.'+me.type}else{me.path=component+'/'+component+'.'+me.type}};
+YUI_config = {"debug":false,"base":"https:\/\/weblearn.fh-kufstein.ac.at\/lib\/yuilib\/3.17.2\/","comboBase":"https:\/\/weblearn.fh-kufstein.ac.at\/theme\/yui_combo.php?","combine":true,"filter":null,"insertBefore":"firstthemesheet","groups":{"yui2":{"base":"https:\/\/weblearn.fh-kufstein.ac.at\/lib\/yuilib\/2in3\/2.9.0\/build\/","comboBase":"https:\/\/weblearn.fh-kufstein.ac.at\/theme\/yui_combo.php?","combine":true,"ext":false,"root":"2in3\/2.9.0\/build\/","patterns":{"yui2-":{"group":"yui2","configFn":yui1ConfigFn}}},"moodle":{"name":"moodle","base":"https:\/\/weblearn.fh-kufstein.ac.at\/theme\/yui_combo.php?m\/1569507974\/","combine":true,"comboBase":"https:\/\/weblearn.fh-kufstein.ac.at\/theme\/yui_combo.php?","ext":false,"root":"m\/1569507974\/","patterns":{"moodle-":{"group":"moodle","configFn":yui2ConfigFn}},"filter":null,"modules":{"moodle-core-actionmenu":{"requires":["base","event","node-event-simulate"]},"moodle-core-dragdrop":{"requires":["base","node","io","dom","dd","event-key","event-focus","moodle-core-notification"]},"moodle-core-handlebars":{"condition":{"trigger":"handlebars","when":"after"}},"moodle-core-tooltip":{"requires":["base","node","io-base","moodle-core-notification-dialogue","json-parse","widget-position","widget-position-align","event-outside","cache-base"]},"moodle-core-dock":{"requires":["base","node","event-custom","event-mouseenter","event-resize","escape","moodle-core-dock-loader","moodle-core-event"]},"moodle-core-dock-loader":{"requires":["escape"]},"moodle-core-maintenancemodetimer":{"requires":["base","node"]},"moodle-core-popuphelp":{"requires":["moodle-core-tooltip"]},"moodle-core-lockscroll":{"requires":["plugin","base-build"]},"moodle-core-notification":{"requires":["moodle-core-notification-dialogue","moodle-core-notification-alert","moodle-core-notification-confirm","moodle-core-notification-exception","moodle-core-notification-ajaxexception"]},"moodle-core-notification-dialogue":{"requires":["base","node","panel","escape","event-key","dd-plugin","moodle-core-widget-focusafterclose","moodle-core-lockscroll"]},"moodle-core-notification-alert":{"requires":["moodle-core-notification-dialogue"]},"moodle-core-notification-confirm":{"requires":["moodle-core-notification-dialogue"]},"moodle-core-notification-exception":{"requires":["moodle-core-notification-dialogue"]},"moodle-core-notification-ajaxexception":{"requires":["moodle-core-notification-dialogue"]},"moodle-core-checknet":{"requires":["base-base","moodle-core-notification-alert","io-base"]},"moodle-core-languninstallconfirm":{"requires":["base","node","moodle-core-notification-confirm","moodle-core-notification-alert"]},"moodle-core-event":{"requires":["event-custom"]},"moodle-core-formchangechecker":{"requires":["base","event-focus","moodle-core-event"]},"moodle-core-blocks":{"requires":["base","node","io","dom","dd","dd-scroll","moodle-core-dragdrop","moodle-core-notification"]},"moodle-core-chooserdialogue":{"requires":["base","panel","moodle-core-notification"]},"moodle-core_availability-form":{"requires":["base","node","event","event-delegate","panel","moodle-core-notification-dialogue","json"]},"moodle-backup-backupselectall":{"requires":["node","event","node-event-simulate","anim"]},"moodle-backup-confirmcancel":{"requires":["node","node-event-simulate","moodle-core-notification-confirm"]},"moodle-course-dragdrop":{"requires":["base","node","io","dom","dd","dd-scroll","moodle-core-dragdrop","moodle-core-notification","moodle-course-coursebase","moodle-course-util"]},"moodle-course-formatchooser":{"requires":["base","node","node-event-simulate"]},"moodle-course-modchooser":{"requires":["moodle-core-chooserdialogue","moodle-course-coursebase"]},"moodle-course-categoryexpander":{"requires":["node","event-key"]},"moodle-course-util":{"requires":["node"],"use":["moodle-course-util-base"],"submodules":{"moodle-course-util-base":{},"moodle-course-util-section":{"requires":["node","moodle-course-util-base"]},"moodle-course-util-cm":{"requires":["node","moodle-course-util-base"]}}},"moodle-course-management":{"requires":["base","node","io-base","moodle-core-notification-exception","json-parse","dd-constrain","dd-proxy","dd-drop","dd-delegate","node-event-delegate"]},"moodle-form-dateselector":{"requires":["base","node","overlay","calendar"]},"moodle-form-showadvanced":{"requires":["node","base","selector-css3"]},"moodle-form-passwordunmask":{"requires":[]},"moodle-form-shortforms":{"requires":["node","base","selector-css3","moodle-core-event"]},"moodle-question-qbankmanager":{"requires":["node","selector-css3"]},"moodle-question-searchform":{"requires":["base","node"]},"moodle-question-preview":{"requires":["base","dom","event-delegate","event-key","core_question_engine"]},"moodle-question-chooser":{"requires":["moodle-core-chooserdialogue"]},"moodle-availability_completion-form":{"requires":["base","node","event","moodle-core_availability-form"]},"moodle-availability_date-form":{"requires":["base","node","event","io","moodle-core_availability-form"]},"moodle-availability_grade-form":{"requires":["base","node","event","moodle-core_availability-form"]},"moodle-availability_group-form":{"requires":["base","node","event","moodle-core_availability-form"]},"moodle-availability_grouping-form":{"requires":["base","node","event","moodle-core_availability-form"]},"moodle-availability_profile-form":{"requires":["base","node","event","moodle-core_availability-form"]},"moodle-qtype_ddimageortext-form":{"requires":["moodle-qtype_ddimageortext-dd","form_filepicker"]},"moodle-qtype_ddimageortext-dd":{"requires":["node","dd","dd-drop","dd-constrain"]},"moodle-qtype_ddmarker-form":{"requires":["moodle-qtype_ddmarker-dd","form_filepicker","graphics","escape"]},"moodle-qtype_ddmarker-dd":{"requires":["node","event-resize","dd","dd-drop","dd-constrain","graphics"]},"moodle-qtype_ddwtos-dd":{"requires":["node","dd","dd-drop","dd-constrain"]},"moodle-mod_assign-history":{"requires":["node","transition"]},"moodle-mod_checklist-linkselect":{"requires":["node","event-valuechange"]},"moodle-mod_customcert-rearrange":{"requires":["dd-delegate","dd-drag"]},"moodle-mod_forum-subscriptiontoggle":{"requires":["base-base","io-base"]},"moodle-mod_offlinequiz-repaginate":{"requires":["base","event","node","io","moodle-core-notification-dialogue"]},"moodle-mod_offlinequiz-questionchooser":{"requires":["moodle-core-chooserdialogue","moodle-mod_offlinequiz-util","querystring-parse"]},"moodle-mod_offlinequiz-dragdrop":{"requires":["base","node","io","dom","dd","dd-scroll","moodle-core-dragdrop","moodle-core-notification","moodle-mod_offlinequiz-offlinequizbase","moodle-mod_offlinequiz-util-base","moodle-mod_offlinequiz-util-page","moodle-mod_offlinequiz-util-slot","moodle-course-util"]},"moodle-mod_offlinequiz-autosave":{"requires":["base","node","event","event-valuechange","node-event-delegate","io-form"]},"moodle-mod_offlinequiz-randomquestion":{"requires":["base","event","node","io","moodle-core-notification-dialogue"]},"moodle-mod_offlinequiz-offlinequizbase":{"requires":["base","node"]},"moodle-mod_offlinequiz-toolboxes":{"requires":["base","node","event","event-key","io","moodle-mod_offlinequiz-offlinequizbase","moodle-mod_offlinequiz-util-slot","moodle-core-notification-ajaxexception"]},"moodle-mod_offlinequiz-util":{"requires":["node"],"use":["moodle-mod_offlinequiz-util-base"],"submodules":{"moodle-mod_offlinequiz-util-base":{},"moodle-mod_offlinequiz-util-slot":{"requires":["node","moodle-mod_offlinequiz-util-base"]},"moodle-mod_offlinequiz-util-page":{"requires":["node","moodle-mod_offlinequiz-util-base"]}}},"moodle-mod_offlinequiz-modform":{"requires":["base","node","event"]},"moodle-mod_offlinequiz-offlinequizquestionbank":{"requires":["base","event","node","io","io-form","yui-later","moodle-question-qbankmanager","moodle-core-notification-dialogue"]},"moodle-mod_quiz-repaginate":{"requires":["base","event","node","io","moodle-core-notification-dialogue"]},"moodle-mod_quiz-questionchooser":{"requires":["moodle-core-chooserdialogue","moodle-mod_quiz-util","querystring-parse"]},"moodle-mod_quiz-dragdrop":{"requires":["base","node","io","dom","dd","dd-scroll","moodle-core-dragdrop","moodle-core-notification","moodle-mod_quiz-quizbase","moodle-mod_quiz-util-base","moodle-mod_quiz-util-page","moodle-mod_quiz-util-slot","moodle-course-util"]},"moodle-mod_quiz-quizbase":{"requires":["base","node"]},"moodle-mod_quiz-autosave":{"requires":["base","node","event","event-valuechange","node-event-delegate","io-form"]},"moodle-mod_quiz-toolboxes":{"requires":["base","node","event","event-key","io","moodle-mod_quiz-quizbase","moodle-mod_quiz-util-slot","moodle-core-notification-ajaxexception"]},"moodle-mod_quiz-util":{"requires":["node","moodle-core-actionmenu"],"use":["moodle-mod_quiz-util-base"],"submodules":{"moodle-mod_quiz-util-base":{},"moodle-mod_quiz-util-slot":{"requires":["node","moodle-mod_quiz-util-base"]},"moodle-mod_quiz-util-page":{"requires":["node","moodle-mod_quiz-util-base"]}}},"moodle-mod_quiz-modform":{"requires":["base","node","event"]},"moodle-mod_scheduler-delselected":{"requires":["base","node","event"]},"moodle-mod_scheduler-saveseen":{"requires":["base","node","event"]},"moodle-mod_scheduler-studentlist":{"requires":["base","node","event","io"]},"moodle-message_airnotifier-toolboxes":{"requires":["base","node","io"]},"moodle-block_xp-rulepicker":{"requires":["base","node","handlebars","moodle-core-notification-dialogue"]},"moodle-block_xp-filters":{"requires":["base","node","moodle-core-dragdrop","moodle-block_xp-rulepicker"]},"moodle-block_xp-notification":{"requires":["base","node","handlebars","button-plugin","moodle-core-notification-dialogue"]},"moodle-filter_glossary-autolinker":{"requires":["base","node","io-base","json-parse","event-delegate","overlay","moodle-core-event","moodle-core-notification-alert","moodle-core-notification-exception","moodle-core-notification-ajaxexception"]},"moodle-filter_mathjaxloader-loader":{"requires":["moodle-core-event"]},"moodle-editor_atto-rangy":{"requires":[]},"moodle-editor_atto-editor":{"requires":["node","transition","io","overlay","escape","event","event-simulate","event-custom","node-event-html5","node-event-simulate","yui-throttle","moodle-core-notification-dialogue","moodle-core-notification-confirm","moodle-editor_atto-rangy","handlebars","timers","querystring-stringify"]},"moodle-editor_atto-plugin":{"requires":["node","base","escape","event","event-outside","handlebars","event-custom","timers","moodle-editor_atto-menu"]},"moodle-editor_atto-menu":{"requires":["moodle-core-notification-dialogue","node","event","event-custom"]},"moodle-format_grid-gridkeys":{"requires":["event-nav-keys"]},"moodle-report_eventlist-eventfilter":{"requires":["base","event","node","node-event-delegate","datatable","autocomplete","autocomplete-filters"]},"moodle-report_loglive-fetchlogs":{"requires":["base","event","node","io","node-event-delegate"]},"moodle-gradereport_grader-gradereporttable":{"requires":["base","node","event","handlebars","overlay","event-hover"]},"moodle-gradereport_history-userselector":{"requires":["escape","event-delegate","event-key","handlebars","io-base","json-parse","moodle-core-notification-dialogue"]},"moodle-tool_capability-search":{"requires":["base","node"]},"moodle-tool_lp-dragdrop-reorder":{"requires":["moodle-core-dragdrop"]},"moodle-tool_monitor-dropdown":{"requires":["base","event","node"]},"moodle-assignfeedback_editpdf-editor":{"requires":["base","event","node","io","graphics","json","event-move","event-resize","transition","querystring-stringify-simple","moodle-core-notification-dialog","moodle-core-notification-alert","moodle-core-notification-warning","moodle-core-notification-exception","moodle-core-notification-ajaxexception"]},"moodle-atto_accessibilitychecker-button":{"requires":["color-base","moodle-editor_atto-plugin"]},"moodle-atto_accessibilityhelper-button":{"requires":["moodle-editor_atto-plugin"]},"moodle-atto_align-button":{"requires":["moodle-editor_atto-plugin"]},"moodle-atto_bold-button":{"requires":["moodle-editor_atto-plugin"]},"moodle-atto_charmap-button":{"requires":["moodle-editor_atto-plugin"]},"moodle-atto_clear-button":{"requires":["moodle-editor_atto-plugin"]},"moodle-atto_collapse-button":{"requires":["moodle-editor_atto-plugin"]},"moodle-atto_emoticon-button":{"requires":["moodle-editor_atto-plugin"]},"moodle-atto_equation-button":{"requires":["moodle-editor_atto-plugin","moodle-core-event","io","event-valuechange","tabview","array-extras"]},"moodle-atto_filedragdrop-button":{"requires":["moodle-editor_atto-plugin"]},"moodle-atto_fullscreen-button":{"requires":["event-resize","moodle-editor_atto-plugin"]},"moodle-atto_generico-button":{"requires":["moodle-editor_atto-plugin"]},"moodle-atto_html-button":{"requires":["moodle-editor_atto-plugin","event-valuechange"]},"moodle-atto_htmlplus-button":{"requires":["moodle-editor_atto-plugin","moodle-atto_htmlplus-beautify","moodle-atto_htmlplus-codemirror","event-valuechange"]},"moodle-atto_htmlplus-codemirror":{"requires":["moodle-atto_htmlplus-codemirror-skin"]},"moodle-atto_htmlplus-beautify":{},"moodle-atto_image-button":{"requires":["moodle-editor_atto-plugin"]},"moodle-atto_indent-button":{"requires":["moodle-editor_atto-plugin"]},"moodle-atto_italic-button":{"requires":["moodle-editor_atto-plugin"]},"moodle-atto_link-button":{"requires":["moodle-editor_atto-plugin"]},"moodle-atto_managefiles-button":{"requires":["moodle-editor_atto-plugin"]},"moodle-atto_managefiles-usedfiles":{"requires":["node","escape"]},"moodle-atto_media-button":{"requires":["moodle-editor_atto-plugin","moodle-form-shortforms"]},"moodle-atto_multilang2-button":{"requires":["moodle-editor_atto-plugin"]},"moodle-atto_noautolink-button":{"requires":["moodle-editor_atto-plugin"]},"moodle-atto_orderedlist-button":{"requires":["moodle-editor_atto-plugin"]},"moodle-atto_preview-button":{"requires":["moodle-editor_atto-plugin"]},"moodle-atto_recordrtc-button":{"requires":["moodle-editor_atto-plugin","moodle-atto_recordrtc-recording"]},"moodle-atto_recordrtc-recording":{"requires":["moodle-atto_recordrtc-button"]},"moodle-atto_rtl-button":{"requires":["moodle-editor_atto-plugin"]},"moodle-atto_strike-button":{"requires":["moodle-editor_atto-plugin"]},"moodle-atto_styles-button":{"requires":["moodle-editor_atto-plugin"]},"moodle-atto_subscript-button":{"requires":["moodle-editor_atto-plugin"]},"moodle-atto_superscript-button":{"requires":["moodle-editor_atto-plugin"]},"moodle-atto_table-button":{"requires":["moodle-editor_atto-plugin","moodle-editor_atto-menu","event","event-valuechange"]},"moodle-atto_title-button":{"requires":["moodle-editor_atto-plugin"]},"moodle-atto_underline-button":{"requires":["moodle-editor_atto-plugin"]},"moodle-atto_undo-button":{"requires":["moodle-editor_atto-plugin"]},"moodle-atto_unorderedlist-button":{"requires":["moodle-editor_atto-plugin"]},"moodle-atto_wiris-button":{"requires":["moodle-editor_atto-plugin","get"]},"moodle-atto_wordimport-button":{"requires":["moodle-editor_atto-plugin"]}}},"gallery":{"name":"gallery","base":"https:\/\/weblearn.fh-kufstein.ac.at\/lib\/yuilib\/gallery\/","combine":true,"comboBase":"https:\/\/weblearn.fh-kufstein.ac.at\/theme\/yui_combo.php?","ext":false,"root":"gallery\/1569507974\/","patterns":{"gallery-":{"group":"gallery"}}}},"modules":{"core_filepicker":{"name":"core_filepicker","fullpath":"https:\/\/weblearn.fh-kufstein.ac.at\/lib\/javascript.php\/1569507974\/repository\/filepicker.js","requires":["base","node","node-event-simulate","json","async-queue","io-base","io-upload-iframe","io-form","yui2-treeview","panel","cookie","datatable","datatable-sort","resize-plugin","dd-plugin","escape","moodle-core_filepicker","moodle-core-notification-dialogue"]},"core_comment":{"name":"core_comment","fullpath":"https:\/\/weblearn.fh-kufstein.ac.at\/lib\/javascript.php\/1569507974\/comment\/comment.js","requires":["base","io-base","node","json","yui2-animation","overlay","escape"]},"mathjax":{"name":"mathjax","fullpath":"https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/mathjax\/2.7.2\/MathJax.js?delayStartupUntil=configured"}}};
+M.yui.loader = {modules: {}};
+
+//]]>
+</script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body  id="page-mod-resource-view" class="format-topics  path-mod path-mod-resource gecko dir-ltr lang-de yui-skin-sam yui3-skin-sam weblearn-fh-kufstein-ac-at pagelayout-incourse course-3835 context-125118 cmid-67640 category-184 ">
+
+<div id="page-wrapper">
+
+    <div>
+    <a class="sr-only sr-only-focusable" href="#maincontent">Zum Hauptinhalt</a>
+</div><script type="text/javascript" src="https://weblearn.fh-kufstein.ac.at/theme/yui_combo.php?rollup/3.17.2/yui-moodlesimple-min.js"></script><script type="text/javascript" src="https://weblearn.fh-kufstein.ac.at/lib/javascript.php/1569507974/lib/javascript-static.js"></script>
+<script type="text/javascript">
+//<![CDATA[
+document.body.className += ' jsenabled';
+//]]>
+</script>
+
+
+
+    <nav class="fixed-top navbar navbar-light bg-white navbar-expand moodle-has-zindex">
+    
+            <div data-region="drawer-toggle" class="d-inline-block mr-3">
+                <button aria-expanded="false" aria-controls="nav-drawer" type="button" class="btn nav-link float-sm-left mr-1 btn-secondary" data-action="toggle-drawer" data-side="left" data-preference="drawer-open-nav"><i class="icon fa fa-bars fa-fw " aria-hidden="true"  ></i><span class="sr-only">Website-Übersicht</span></button>
+            </div>
+    
+            <a href="https://weblearn.fh-kufstein.ac.at" class="navbar-brand 
+                    d-none d-sm-inline
+                    ">
+                <!--<span class="site-name d-none d-md-inline">WEBLEARN</span>-->
+            </a>
+    
+            <ul class="navbar-nav d-none d-md-flex">
+                <!-- custom_menu -->
+                <li class="dropdown nav-item">
+    <a class="dropdown-toggle nav-link" id="drop-down-5de22bfdd363c5de22bfdcf6554" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" href="#" aria-controls="drop-down-menu-5de22bfdd363c5de22bfdcf6554">
+        Quicklinks
+    </a>
+    <div class="dropdown-menu" role="menu" id="drop-down-menu-5de22bfdd363c5de22bfdcf6554" aria-labelledby="drop-down-5de22bfdd363c5de22bfdcf6554">
+                <a class="dropdown-item" role="menuitem" href="http://www.fh-kufstein.ac.at/" title="FH Kufstein Tirol Website">FH Kufstein Tirol Website</a>
+                <a class="dropdown-item" role="menuitem" href="https://mail.fh-kufstein.ac.at/owa/" title="Webmail">Webmail</a>
+                <a class="dropdown-item" role="menuitem" href="https://www.fh-kufstein.ac.at/Studieren/Servicebereiche/Bibliothek" title="Link zur Bibliotheksseite">Bibliothek</a>
+                <a class="dropdown-item" role="menuitem" href="https://checkin.fh-kufstein.ac.at/" title="fh.checkin">fh.checkin</a>
+                <a class="dropdown-item" role="menuitem" href="https://checkin.fh-kufstein.ac.at/infoboard/" title="fh.infoboard">fh.infoboard</a>
+    </div>
+</li><li class="dropdown nav-item">
+    <a class="dropdown-toggle nav-link" id="drop-down-5de22bfdd38785de22bfdcf6555" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" href="#" aria-controls="drop-down-menu-5de22bfdd38785de22bfdcf6555">
+        Hilfe
+    </a>
+    <div class="dropdown-menu" role="menu" id="drop-down-menu-5de22bfdd38785de22bfdcf6555" aria-labelledby="drop-down-5de22bfdd38785de22bfdcf6555">
+                <a class="dropdown-item" role="menuitem" href="https://weblearn.fh-kufstein.ac.at/course/view.php?id=240" title="Allgemeine Hilfe beim Login">Hilfe zum Login</a>
+                <a class="dropdown-item" role="menuitem" href="mailto:itsupport@fh-kufstein.ac.at?subject=Weblearn%20%28Moodle%29%20Zugangsdaten%20vergessen" title="Ticket an IT Support zwecks vergessener Zugangsdaten senden">Weblearn (Moodle) Zugangsdaten vergessen</a>
+                <a class="dropdown-item" role="menuitem" href="mailto:elearning@fh-kufstein.ac.at?subject=Weblearn%20%28Moodle%29%20Ticket" title="Ticket an den eLearning Support senden">eLearning Ticket Support</a>
+                <a class="dropdown-item" role="menuitem" href="https://weblearn.fh-kufstein.ac.at/course/view.php?id=2817" title="Client für den Remote eLearning Support">AnyDesk Remote Support</a>
+                <div class="dropdown-divider" role="presentation"></div>
+                <a class="dropdown-item" role="menuitem" href="https://docs.moodle.org/33/de/Hauptseite" title="Hier finden Sie die Moodle Hilfe und Dokumentation">Weblearn (Moodle) Hilfe und Dokumentation</a>
+    </div>
+</li><li class="dropdown nav-item">
+    <a class="dropdown-toggle nav-link" id="drop-down-5de22bfdd39ca5de22bfdcf6556" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" href="#" aria-controls="drop-down-menu-5de22bfdd39ca5de22bfdcf6556">
+        Deutsch ‎(de)‎
+    </a>
+    <div class="dropdown-menu" role="menu" id="drop-down-menu-5de22bfdd39ca5de22bfdcf6556" aria-labelledby="drop-down-5de22bfdd39ca5de22bfdcf6556">
+                <a class="dropdown-item" role="menuitem" href="https://weblearn.fh-kufstein.ac.at/mod/resource/view.php?id=67640&amp;lang=de" title="Deutsch ‎(de)‎">Deutsch ‎(de)‎</a>
+                <a class="dropdown-item" role="menuitem" href="https://weblearn.fh-kufstein.ac.at/mod/resource/view.php?id=67640&amp;lang=en" title="English ‎(en)‎">English ‎(en)‎</a>
+    </div>
+</li>
+                <!-- page_heading_menu -->
+                
+            </ul>
+            <ul class="nav navbar-nav ml-auto">
+                <div class="d-none d-lg-block">
+                
+            </div>
+                <!-- navbar_plugin_output -->
+                <li class="nav-item">
+                <div class="popover-region collapsed popover-region-messages"
+    id="nav-message-popover-container" data-userid="6774"
+    data-region="popover-region">
+    <div class="popover-region-toggle nav-link"
+        data-region="popover-region-toggle"
+        role="button"
+        aria-controls="popover-region-container-5de22bfdd56c65de22bfdcf6557"
+        aria-haspopup="true"
+        aria-label="Mitteilungsfenster ohne neue Mitteilungen anzeigen"
+        tabindex="0">
+                <i class="icon fa fa-comment fa-fw "  title="Mitteilungen" aria-label="Mitteilungen"></i>
+        <div class="count-container hidden" data-region="count-container">0</div>
+
+    </div>
+    <div 
+        id="popover-region-container-5de22bfdd56c65de22bfdcf6557"
+        class="popover-region-container"
+        data-region="popover-region-container"
+        aria-expanded="false"
+        aria-hidden="true"
+        aria-label="Mitteilungsfenster"
+        role="region">
+        <div class="popover-region-header-container">
+            <h3 class="popover-region-header-text" data-region="popover-region-header-text">Mitteilungen</h3>
+            <div class="popover-region-header-actions" data-region="popover-region-header-actions">        <div class="newmessage-link">
+            <a href="https://weblearn.fh-kufstein.ac.at/message/index.php?contactsfirst=1">Neue Mitteilung
+            </a>
+        </div>
+        <a class="mark-all-read-button"
+           href="#"
+           role="button"
+           title="Alle als gelesen markieren"
+           data-action="mark-all-read">
+            <span class="normal-icon"><i class="icon fa fa-check fa-fw "  title="Alle als gelesen markieren" aria-label="Alle als gelesen markieren"></i></span>
+            <span class="loading-icon"><i class="icon fa fa-circle-o-notch fa-spin fa-fw "  title="Laden ..." aria-label="Laden ..."></i></span>
+        </a>
+        <a href="https://weblearn.fh-kufstein.ac.at/message/edit.php?id=6774"
+           title="Mitteilungen">
+            <i class="icon fa fa-cog fa-fw "  title="Mitteilungen" aria-label="Mitteilungen"></i>
+        </a>
+</div>
+        </div>
+        <div class="popover-region-content-container" data-region="popover-region-content-container">
+            <div class="popover-region-content" data-region="popover-region-content">
+                        <div class="messages" data-region="messages" role="log" aria-busy="false" aria-atomic="false" aria-relevant="additions"></div>
+        <div class="empty-message" data-region="empty-message" tabindex="0">Keine Mitteilungen</div>
+
+            </div>
+            <span class="loading-icon"><i class="icon fa fa-circle-o-notch fa-spin fa-fw "  title="Laden ..." aria-label="Laden ..."></i></span>
+        </div>
+                <a class="see-all-link"
+                    href="https://weblearn.fh-kufstein.ac.at/message/index.php">
+                    <div class="popover-region-footer-container">
+                        <div class="popover-region-seeall-text">Alle anzeigen</div>
+                    </div>
+                </a>
+    </div>
+</div><div class="popover-region collapsed popover-region-notifications"
+    id="nav-notification-popover-container" data-userid="6774"
+    data-region="popover-region">
+    <div class="popover-region-toggle nav-link"
+        data-region="popover-region-toggle"
+        role="button"
+        aria-controls="popover-region-container-5de22bfdd849e5de22bfdcf6558"
+        aria-haspopup="true"
+        aria-label="Mitteilungsfenster ohne neue Systemnachrichten anzeigen"
+        tabindex="0">
+                <i class="icon fa fa-bell fa-fw "  title="Systemnachrichten" aria-label="Systemnachrichten"></i>
+        <div class="count-container hidden" data-region="count-container">0</div>
+
+    </div>
+    <div 
+        id="popover-region-container-5de22bfdd849e5de22bfdcf6558"
+        class="popover-region-container"
+        data-region="popover-region-container"
+        aria-expanded="false"
+        aria-hidden="true"
+        aria-label="Mitteilungsfenster"
+        role="region">
+        <div class="popover-region-header-container">
+            <h3 class="popover-region-header-text" data-region="popover-region-header-text">Systemnachrichten</h3>
+            <div class="popover-region-header-actions" data-region="popover-region-header-actions">        <a class="mark-all-read-button"
+           href="#"
+           title="Alle als gelesen markieren"
+           data-action="mark-all-read"
+           role="button">
+            <span class="normal-icon"><i class="icon fa fa-check fa-fw "  title="Alle als gelesen markieren" aria-label="Alle als gelesen markieren"></i></span>
+            <span class="loading-icon"><i class="icon fa fa-circle-o-notch fa-spin fa-fw "  title="Laden ..." aria-label="Laden ..."></i></span>
+        </a>
+        <a href="https://weblearn.fh-kufstein.ac.at/message/notificationpreferences.php?userid=6774"
+           title="Systemnachrichten">
+            <i class="icon fa fa-cog fa-fw "  title="Systemnachrichten" aria-label="Systemnachrichten"></i>
+        </a>
+</div>
+        </div>
+        <div class="popover-region-content-container" data-region="popover-region-content-container">
+            <div class="popover-region-content" data-region="popover-region-content">
+                        <div class="all-notifications"
+            data-region="all-notifications"
+            role="log"
+            aria-busy="false"
+            aria-atomic="false"
+            aria-relevant="additions"></div>
+        <div class="empty-message" tabindex="0" data-region="empty-message">Keine Systemnachrichten</div>
+
+            </div>
+            <span class="loading-icon"><i class="icon fa fa-circle-o-notch fa-spin fa-fw "  title="Laden ..." aria-label="Laden ..."></i></span>
+        </div>
+                <a class="see-all-link"
+                    href="https://weblearn.fh-kufstein.ac.at/message/output/popup/notifications.php">
+                    <div class="popover-region-footer-container">
+                        <div class="popover-region-seeall-text">Alle anzeigen</div>
+                    </div>
+                </a>
+    </div>
+</div>
+                </li>
+                <!-- user_menu -->
+                <li class="nav-item d-flex align-items-center">
+                    <div class="usermenu"><div class="action-menu moodle-actionmenu nowrap-items d-inline" id="action-menu-1" data-enhance="moodle-core-actionmenu">
+
+        <div class="menubar d-flex " id="action-menu-1-menubar" role="menubar">
+
+            
+
+
+                <div class="action-menu-trigger">
+                    <div class="dropdown">
+                        <a href="#" tabindex="0" class=" dropdown-toggle icon-no-margin" id="dropdown-1" aria-label="Nutzermenü" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false" aria-controls="action-menu-1-menu">
+                            
+                            <span class="userbutton"><span class="usertext mr-1">RetoJan Heller</span><span class="avatars"><span class="avatar current"><img src="https://secure.gravatar.com/avatar/14abf473eade4341aaa693e8b5f54f5c?s=35&amp;d=mm" class="userpicture defaultuserpic" width="35" height="35" role="presentation" aria-hidden="true" /></span></span></span>
+                                
+                            <b class="caret"></b>
+                        </a>
+                            <div class="dropdown-menu dropdown-menu-right menu  align-tr-br" id="action-menu-1-menu" data-rel="menu-content" aria-labelledby="action-menu-toggle-1" role="menu" data-align="tr-br" id="dropdown-menu-1">
+                                        <a href="https://weblearn.fh-kufstein.ac.at/my/" class="dropdown-item menu-action" role="menuitem" data-title="mymoodle,admin" aria-labelledby="actionmenuaction-1">
+                                                <i class="icon fa fa-tachometer fa-fw " aria-hidden="true"  ></i>
+                                            <span class="menu-action-text" id="actionmenuaction-1">
+                                                Dashboard
+                                            </span>
+                                        </a>
+                                        <div class="dropdown-divider" role="presentation"><span class="filler">&nbsp;</span></div>
+                                        <a href="https://weblearn.fh-kufstein.ac.at/user/profile.php?id=6774" class="dropdown-item menu-action" role="menuitem" data-title="profile,moodle" aria-labelledby="actionmenuaction-2">
+                                                <i class="icon fa fa-user fa-fw " aria-hidden="true"  ></i>
+                                            <span class="menu-action-text" id="actionmenuaction-2">
+                                                Profil
+                                            </span>
+                                        </a>
+                                        <a href="https://weblearn.fh-kufstein.ac.at/grade/report/overview/index.php" class="dropdown-item menu-action" role="menuitem" data-title="grades,grades" aria-labelledby="actionmenuaction-3">
+                                                <i class="icon fa fa-table fa-fw " aria-hidden="true"  ></i>
+                                            <span class="menu-action-text" id="actionmenuaction-3">
+                                                Bewertungen
+                                            </span>
+                                        </a>
+                                        <a href="https://weblearn.fh-kufstein.ac.at/message/index.php" class="dropdown-item menu-action" role="menuitem" data-title="messages,message" aria-labelledby="actionmenuaction-4">
+                                                <i class="icon fa fa-comment fa-fw " aria-hidden="true"  ></i>
+                                            <span class="menu-action-text" id="actionmenuaction-4">
+                                                Mitteilungen
+                                            </span>
+                                        </a>
+                                        <a href="https://weblearn.fh-kufstein.ac.at/user/preferences.php" class="dropdown-item menu-action" role="menuitem" data-title="preferences,moodle" aria-labelledby="actionmenuaction-5">
+                                                <i class="icon fa fa-wrench fa-fw " aria-hidden="true"  ></i>
+                                            <span class="menu-action-text" id="actionmenuaction-5">
+                                                Einstellungen
+                                            </span>
+                                        </a>
+                                        <div class="dropdown-divider" role="presentation"><span class="filler">&nbsp;</span></div>
+                                        <a href="https://weblearn.fh-kufstein.ac.at/login/logout.php?sesskey=YLMNWCjQKJ" class="dropdown-item menu-action" role="menuitem" data-title="logout,moodle" aria-labelledby="actionmenuaction-6">
+                                                <i class="icon fa fa-sign-out fa-fw " aria-hidden="true"  ></i>
+                                            <span class="menu-action-text" id="actionmenuaction-6">
+                                                Logout
+                                            </span>
+                                        </a>
+                            </div>
+                    </div>
+                </div>
+
+        </div>
+
+</div></div>
+                </li>
+            </ul>
+            <!-- search_box -->
+    </nav>
+    
+
+    <div id="page" class="container-fluid">
+        <header id="page-header" class="row">
+    <div class="col-12 pt-3 pb-3">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex">
+                    <div class="mr-auto">
+                    <div class="page-context-header"><div class="page-header-headings"><h1>DSIA.bbM.19.WS19 Algorithmik &amp; Statistik für Data Science 1 Lab UE - 1</h1></div></div>
+                    </div>
+
+                </div>
+                <div class="d-flex flex-wrap">
+                    <div id="page-navbar">
+                        <nav role="navigation" aria-label="Navigationspfad">
+    <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a href="https://weblearn.fh-kufstein.ac.at/my/"  >Dashboard</a>
+                </li>
+                <li class="breadcrumb-item">Meine Kurse</li>
+                <li class="breadcrumb-item">
+                    <a href="https://weblearn.fh-kufstein.ac.at/course/view.php?id=3835"  title="DSIA.bbM.19.WS19 Algorithmik &amp; Statistik für Data Science 1 Lab UE - 1">DSIA.bbM.19.WS19 ALG 27257 - 1</a>
+                </li>
+                <li class="breadcrumb-item">
+                    <a href="https://weblearn.fh-kufstein.ac.at/course/view.php?id=3835#section-3"  >Übung 3 - Daten- und Verteilungen</a>
+                </li>
+                <li class="breadcrumb-item">
+                    <a href="https://weblearn.fh-kufstein.ac.at/mod/resource/view.php?id=67640" aria-current="page" title="Datei">03 R bootstrap tutorial</a>
+                </li>
+    </ol>
+</nav>
+                    </div>
+                    <div class="ml-auto d-flex">
+                        
+                    </div>
+                    <div id="course-header">
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+        <div id="page-content" class="row">
+            <div id="region-main-box" class="col-12">
+                <section id="region-main" >
+                    <div class="card">
+                        <div class="card-body">
+                            <span class="notifications" id="user-notifications"></span>
+                            <div role="main"><span id="maincontent"></span><h2>03 R bootstrap tutorial</h2><div class="resourceworkaround">Klicken Sie auf den Link '<a href="https://weblearn.fh-kufstein.ac.at/pluginfile.php/125118/mod_resource/content/0/03_R_bootstrap_tutorial.Rmd" onclick="this.target='_blank'">03_R_bootstrap_tutorial.Rmd</a>', um die Datei anzuzeigen.</div></div>
+                            
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </div>
+    <div id="nav-drawer" data-region="drawer" class="d-print-none moodle-has-zindex closed" aria-hidden="true" tabindex="-1">
+        <nav class="list-group">
+            <a class="list-group-item list-group-item-action " href="https://weblearn.fh-kufstein.ac.at/course/view.php?id=3835" data-key="coursehome" data-isexpandable="0" data-indent="0" data-showdivider="0" data-type="60" data-nodetype="0" data-collapse="0" data-forceopen="0" data-isactive="0" data-hidden="0" data-preceedwithhr="0" >
+                <div class="m-l-0">
+                    <div class="media">
+                        <span class="media-left">
+                            <i class="icon fa fa-graduation-cap fa-fw " aria-hidden="true"  ></i>
+                        </span>
+                        <span class="media-body ">DSIA.bbM.19.WS19 ALG 27257 - 1</span>
+                    </div>
+                </div>
+            </a>
+            <a class="list-group-item list-group-item-action " href="https://weblearn.fh-kufstein.ac.at/user/index.php?id=3835" data-key="participants" data-isexpandable="0" data-indent="0" data-showdivider="0" data-type="90" data-nodetype="1" data-collapse="0" data-forceopen="0" data-isactive="0" data-hidden="0" data-preceedwithhr="0" data-parent-key="3835">
+                <div class="m-l-0">
+                    <div class="media">
+                        <span class="media-left">
+                            <i class="icon fa fa-users fa-fw " aria-hidden="true"  ></i>
+                        </span>
+                        <span class="media-body ">Teilnehmer/innen</span>
+                    </div>
+                </div>
+            </a>
+            <a class="list-group-item list-group-item-action " href="https://weblearn.fh-kufstein.ac.at/grade/report/index.php?id=3835" data-key="grades" data-isexpandable="0" data-indent="0" data-showdivider="0" data-type="70" data-nodetype="0" data-collapse="0" data-forceopen="0" data-isactive="0" data-hidden="0" data-preceedwithhr="0" data-parent-key="3835">
+                <div class="m-l-0">
+                    <div class="media">
+                        <span class="media-left">
+                            <i class="icon fa fa-table fa-fw " aria-hidden="true"  ></i>
+                        </span>
+                        <span class="media-body ">Bewertungen</span>
+                    </div>
+                </div>
+            </a>
+            <a class="list-group-item list-group-item-action " href="https://weblearn.fh-kufstein.ac.at/local/downloadcenter/index.php?courseid=3835" data-key="downloadcenter" data-isexpandable="0" data-indent="0" data-showdivider="0" data-type="60" data-nodetype="0" data-collapse="1" data-forceopen="0" data-isactive="0" data-hidden="0" data-preceedwithhr="0" data-parent-key="3835">
+                <div class="m-l-0">
+                    <div class="media">
+                        <span class="media-left">
+                            <img class="icon " alt="" aria-hidden="true" src="https://weblearn.fh-kufstein.ac.at/theme/image.php/fhkufstein/local_downloadcenter/1569507974/icon" />
+                        </span>
+                        <span class="media-body ">Download Center</span>
+                    </div>
+                </div>
+            </a>
+            <a class="list-group-item list-group-item-action " href="https://weblearn.fh-kufstein.ac.at/course/view.php?id=3835#section-0" data-key="41020" data-isexpandable="0" data-indent="0" data-showdivider="0" data-type="30" data-nodetype="1" data-collapse="0" data-forceopen="0" data-isactive="0" data-hidden="0" data-preceedwithhr="0" data-parent-key="3835">
+                <div class="m-l-0">
+                    <div class="media">
+                        <span class="media-left">
+                            <i class="icon fa fa-folder-o fa-fw " aria-hidden="true"  ></i>
+                        </span>
+                        <span class="media-body ">Allgemeines</span>
+                    </div>
+                </div>
+            </a>
+            <a class="list-group-item list-group-item-action " href="https://weblearn.fh-kufstein.ac.at/course/view.php?id=3835#section-1" data-key="41021" data-isexpandable="0" data-indent="0" data-showdivider="0" data-type="30" data-nodetype="1" data-collapse="0" data-forceopen="0" data-isactive="0" data-hidden="0" data-preceedwithhr="0" data-parent-key="3835">
+                <div class="m-l-0">
+                    <div class="media">
+                        <span class="media-left">
+                            <i class="icon fa fa-folder-o fa-fw " aria-hidden="true"  ></i>
+                        </span>
+                        <span class="media-body ">Einführung + Übung 1 (ohne Bewertung)</span>
+                    </div>
+                </div>
+            </a>
+            <a class="list-group-item list-group-item-action " href="https://weblearn.fh-kufstein.ac.at/course/view.php?id=3835#section-2" data-key="41022" data-isexpandable="0" data-indent="0" data-showdivider="0" data-type="30" data-nodetype="1" data-collapse="0" data-forceopen="0" data-isactive="0" data-hidden="0" data-preceedwithhr="0" data-parent-key="3835">
+                <div class="m-l-0">
+                    <div class="media">
+                        <span class="media-left">
+                            <i class="icon fa fa-folder-o fa-fw " aria-hidden="true"  ></i>
+                        </span>
+                        <span class="media-body ">Übung 2 - Explorative Datenanalyse</span>
+                    </div>
+                </div>
+            </a>
+            <a class="list-group-item list-group-item-action active" href="https://weblearn.fh-kufstein.ac.at/course/view.php?id=3835#section-3" data-key="41023" data-isexpandable="0" data-indent="0" data-showdivider="0" data-type="30" data-nodetype="1" data-collapse="0" data-forceopen="1" data-isactive="1" data-hidden="0" data-preceedwithhr="0" data-parent-key="3835">
+                <div class="m-l-0">
+                    <div class="media">
+                        <span class="media-left">
+                            <i class="icon fa fa-folder-o fa-fw " aria-hidden="true"  ></i>
+                        </span>
+                        <span class="media-body font-weight-bold">Übung 3 - Daten- und Verteilungen</span>
+                    </div>
+                </div>
+            </a>
+            <a class="list-group-item list-group-item-action " href="https://weblearn.fh-kufstein.ac.at/course/view.php?id=3835#section-5" data-key="44455" data-isexpandable="0" data-indent="0" data-showdivider="0" data-type="30" data-nodetype="1" data-collapse="0" data-forceopen="0" data-isactive="0" data-hidden="0" data-preceedwithhr="0" data-parent-key="3835">
+                <div class="m-l-0">
+                    <div class="media">
+                        <span class="media-left">
+                            <i class="icon fa fa-folder-o fa-fw " aria-hidden="true"  ></i>
+                        </span>
+                        <span class="media-body ">Übung 5 - Regression</span>
+                    </div>
+                </div>
+            </a>
+            <a class="list-group-item list-group-item-action " href="https://weblearn.fh-kufstein.ac.at/course/view.php?id=3835#section-6" data-key="44456" data-isexpandable="0" data-indent="0" data-showdivider="0" data-type="30" data-nodetype="1" data-collapse="0" data-forceopen="0" data-isactive="0" data-hidden="0" data-preceedwithhr="0" data-parent-key="3835">
+                <div class="m-l-0">
+                    <div class="media">
+                        <span class="media-left">
+                            <i class="icon fa fa-folder-o fa-fw " aria-hidden="true"  ></i>
+                        </span>
+                        <span class="media-body ">Übung 6 - Klassifikation</span>
+                    </div>
+                </div>
+            </a>
+            <a class="list-group-item list-group-item-action " href="https://weblearn.fh-kufstein.ac.at/course/view.php?id=3835#section-7" data-key="44457" data-isexpandable="0" data-indent="0" data-showdivider="0" data-type="30" data-nodetype="1" data-collapse="0" data-forceopen="0" data-isactive="0" data-hidden="0" data-preceedwithhr="0" data-parent-key="3835">
+                <div class="m-l-0">
+                    <div class="media">
+                        <span class="media-left">
+                            <i class="icon fa fa-folder-o fa-fw " aria-hidden="true"  ></i>
+                        </span>
+                        <span class="media-body ">Übung 7 - Clustering</span>
+                    </div>
+                </div>
+            </a>
+        </nav>
+        <nav class="list-group m-t-1">
+            <a class="list-group-item list-group-item-action " href="https://weblearn.fh-kufstein.ac.at/my/" data-key="myhome" data-isexpandable="0" data-indent="0" data-showdivider="1" data-type="1" data-nodetype="1" data-collapse="0" data-forceopen="1" data-isactive="0" data-hidden="0" data-preceedwithhr="0" >
+                <div class="m-l-0">
+                    <div class="media">
+                        <span class="media-left">
+                            <i class="icon fa fa-tachometer fa-fw " aria-hidden="true"  ></i>
+                        </span>
+                        <span class="media-body ">Dashboard</span>
+                    </div>
+                </div>
+            </a>
+            <a class="list-group-item list-group-item-action " href="https://weblearn.fh-kufstein.ac.at/?redirect=0" data-key="home" data-isexpandable="0" data-indent="0" data-showdivider="0" data-type="70" data-nodetype="0" data-collapse="0" data-forceopen="0" data-isactive="0" data-hidden="0" data-preceedwithhr="0" data-parent-key="myhome">
+                <div class="m-l-0">
+                    <div class="media">
+                        <span class="media-left">
+                            <i class="icon fa fa-home fa-fw " aria-hidden="true"  ></i>
+                        </span>
+                        <span class="media-body ">Startseite</span>
+                    </div>
+                </div>
+            </a>
+            <a class="list-group-item list-group-item-action " href="https://weblearn.fh-kufstein.ac.at/calendar/view.php?view=month&amp;course=3835" data-key="calendar" data-isexpandable="0" data-indent="0" data-showdivider="0" data-type="60" data-nodetype="0" data-collapse="0" data-forceopen="0" data-isactive="0" data-hidden="0" data-preceedwithhr="0" data-parent-key="1">
+                <div class="m-l-0">
+                    <div class="media">
+                        <span class="media-left">
+                            <i class="icon fa fa-calendar fa-fw " aria-hidden="true"  ></i>
+                        </span>
+                        <span class="media-body ">Kalender</span>
+                    </div>
+                </div>
+            </a>
+            <div class="list-group-item" data-key="mycourses" data-isexpandable="1" data-indent="0" data-showdivider="0" data-type="0" data-nodetype="1" data-collapse="0" data-forceopen="1" data-isactive="0" data-hidden="0" data-preceedwithhr="0" data-parent-key="myhome">
+                <div class="m-l-0">
+                    <div class="media">
+                        <span class="media-left">
+                            <i class="icon fa fa-graduation-cap fa-fw " aria-hidden="true"  ></i>
+                        </span>
+                        <span class="media-body">Meine Kurse</span>
+                    </div>
+                </div>
+            </div>
+            <a class="list-group-item list-group-item-action " href="https://weblearn.fh-kufstein.ac.at/course/view.php?id=3838" data-key="3838" data-isexpandable="0" data-indent="1" data-showdivider="0" data-type="20" data-nodetype="1" data-collapse="0" data-forceopen="0" data-isactive="0" data-hidden="0" data-preceedwithhr="0" data-parent-key="mycourses">
+                <div class="m-l-1">
+                    <div class="media">
+                        <span class="media-left">
+                            <i class="icon fa fa-graduation-cap fa-fw " aria-hidden="true"  ></i>
+                        </span>
+                        <span class="media-body ">DSIA.bbM.19.WS19 SOF 27264 - 1</span>
+                    </div>
+                </div>
+            </a>
+            <a class="list-group-item list-group-item-action " href="https://weblearn.fh-kufstein.ac.at/course/view.php?id=3837" data-key="3837" data-isexpandable="0" data-indent="1" data-showdivider="0" data-type="20" data-nodetype="1" data-collapse="0" data-forceopen="0" data-isactive="0" data-hidden="0" data-preceedwithhr="0" data-parent-key="mycourses">
+                <div class="m-l-1">
+                    <div class="media">
+                        <span class="media-left">
+                            <i class="icon fa fa-graduation-cap fa-fw " aria-hidden="true"  ></i>
+                        </span>
+                        <span class="media-body ">DSIA.bbM.19.WS19 DAT 27261 - 1</span>
+                    </div>
+                </div>
+            </a>
+            <a class="list-group-item list-group-item-action " href="https://weblearn.fh-kufstein.ac.at/course/view.php?id=3835" data-key="3835" data-isexpandable="0" data-indent="1" data-showdivider="0" data-type="20" data-nodetype="1" data-collapse="0" data-forceopen="1" data-isactive="0" data-hidden="0" data-preceedwithhr="0" data-parent-key="mycourses">
+                <div class="m-l-1">
+                    <div class="media">
+                        <span class="media-left">
+                            <i class="icon fa fa-graduation-cap fa-fw " aria-hidden="true"  ></i>
+                        </span>
+                        <span class="media-body ">DSIA.bbM.19.WS19 ALG 27257 - 1</span>
+                    </div>
+                </div>
+            </a>
+            <a class="list-group-item list-group-item-action " href="https://weblearn.fh-kufstein.ac.at/course/view.php?id=3833" data-key="3833" data-isexpandable="0" data-indent="1" data-showdivider="0" data-type="20" data-nodetype="1" data-collapse="0" data-forceopen="0" data-isactive="0" data-hidden="0" data-preceedwithhr="0" data-parent-key="mycourses">
+                <div class="m-l-1">
+                    <div class="media">
+                        <span class="media-left">
+                            <i class="icon fa fa-graduation-cap fa-fw " aria-hidden="true"  ></i>
+                        </span>
+                        <span class="media-body ">DSIA.bbM.19.WS19 SOF 27263 - 1</span>
+                    </div>
+                </div>
+            </a>
+            <a class="list-group-item list-group-item-action " href="https://weblearn.fh-kufstein.ac.at/course/view.php?id=3832" data-key="3832" data-isexpandable="0" data-indent="1" data-showdivider="0" data-type="20" data-nodetype="1" data-collapse="0" data-forceopen="0" data-isactive="0" data-hidden="0" data-preceedwithhr="0" data-parent-key="mycourses">
+                <div class="m-l-1">
+                    <div class="media">
+                        <span class="media-left">
+                            <i class="icon fa fa-graduation-cap fa-fw " aria-hidden="true"  ></i>
+                        </span>
+                        <span class="media-body ">DSIA.bbM.19.WS19 LEA 27262 - 1</span>
+                    </div>
+                </div>
+            </a>
+            <a class="list-group-item list-group-item-action " href="https://weblearn.fh-kufstein.ac.at/course/view.php?id=3831" data-key="3831" data-isexpandable="0" data-indent="1" data-showdivider="0" data-type="20" data-nodetype="1" data-collapse="0" data-forceopen="0" data-isactive="0" data-hidden="0" data-preceedwithhr="0" data-parent-key="mycourses">
+                <div class="m-l-1">
+                    <div class="media">
+                        <span class="media-left">
+                            <i class="icon fa fa-graduation-cap fa-fw " aria-hidden="true"  ></i>
+                        </span>
+                        <span class="media-body ">DSIA.bbM.19.WS19 DAT 27259 - 1</span>
+                    </div>
+                </div>
+            </a>
+            <a class="list-group-item list-group-item-action " href="https://weblearn.fh-kufstein.ac.at/course/view.php?id=3830" data-key="3830" data-isexpandable="0" data-indent="1" data-showdivider="0" data-type="20" data-nodetype="1" data-collapse="0" data-forceopen="0" data-isactive="0" data-hidden="0" data-preceedwithhr="0" data-parent-key="mycourses">
+                <div class="m-l-1">
+                    <div class="media">
+                        <span class="media-left">
+                            <i class="icon fa fa-graduation-cap fa-fw " aria-hidden="true"  ></i>
+                        </span>
+                        <span class="media-body ">DSIA.bbM.19.WS19 BUS 27258 - 1</span>
+                    </div>
+                </div>
+            </a>
+            <a class="list-group-item list-group-item-action " href="https://weblearn.fh-kufstein.ac.at/course/view.php?id=3829" data-key="3829" data-isexpandable="0" data-indent="1" data-showdivider="0" data-type="20" data-nodetype="1" data-collapse="0" data-forceopen="0" data-isactive="0" data-hidden="0" data-preceedwithhr="0" data-parent-key="mycourses">
+                <div class="m-l-1">
+                    <div class="media">
+                        <span class="media-left">
+                            <i class="icon fa fa-graduation-cap fa-fw " aria-hidden="true"  ></i>
+                        </span>
+                        <span class="media-body ">DSIA.bbM.19.WS19 ALG 27255 - 1</span>
+                    </div>
+                </div>
+            </a>
+            <a class="list-group-item list-group-item-action " href="https://weblearn.fh-kufstein.ac.at/course/view.php?id=2683" data-key="2683" data-isexpandable="0" data-indent="1" data-showdivider="0" data-type="20" data-nodetype="1" data-collapse="0" data-forceopen="0" data-isactive="0" data-hidden="0" data-preceedwithhr="0" data-parent-key="mycourses">
+                <div class="m-l-1">
+                    <div class="media">
+                        <span class="media-left">
+                            <i class="icon fa fa-graduation-cap fa-fw " aria-hidden="true"  ></i>
+                        </span>
+                        <span class="media-body ">ÖH Kulturprogramm</span>
+                    </div>
+                </div>
+            </a>
+            <a class="list-group-item list-group-item-action " href="https://weblearn.fh-kufstein.ac.at/course/view.php?id=884" data-key="884" data-isexpandable="0" data-indent="1" data-showdivider="0" data-type="20" data-nodetype="1" data-collapse="0" data-forceopen="0" data-isactive="0" data-hidden="0" data-preceedwithhr="0" data-parent-key="mycourses">
+                <div class="m-l-1">
+                    <div class="media">
+                        <span class="media-left">
+                            <i class="icon fa fa-graduation-cap fa-fw " aria-hidden="true"  ></i>
+                        </span>
+                        <span class="media-body ">Sportprogramm</span>
+                    </div>
+                </div>
+            </a>
+        </nav>
+    </div>
+</div>
+
+<footer id="page-footer" class="py-3 bg-dark text-light">
+    <div class="container">
+        <div id="course-footer"></div>
+
+
+        <div class="logininfo">Sie sind angemeldet als <a href="https://weblearn.fh-kufstein.ac.at/user/profile.php?id=6774" title="Profil anzeigen">RetoJan Heller</a> (<a href="https://weblearn.fh-kufstein.ac.at/login/logout.php?sesskey=YLMNWCjQKJ">Logout</a>)</div>
+        <nav class="nav navbar-nav d-md-none">
+                <ul class="list-unstyled pt-3">
+                                    <li>Quicklinks</li>
+                                <li>
+                                    <ul class="list-unstyled ml-3">
+                                                        <li><a href="http://www.fh-kufstein.ac.at/" title="FH Kufstein Tirol Website">FH Kufstein Tirol Website</a></li>
+                                                        <li><a href="https://mail.fh-kufstein.ac.at/owa/" title="Webmail">Webmail</a></li>
+                                                        <li><a href="https://www.fh-kufstein.ac.at/Studieren/Servicebereiche/Bibliothek" title="Link zur Bibliotheksseite">Bibliothek</a></li>
+                                                        <li><a href="https://checkin.fh-kufstein.ac.at/" title="fh.checkin">fh.checkin</a></li>
+                                                        <li><a href="https://checkin.fh-kufstein.ac.at/infoboard/" title="fh.infoboard">fh.infoboard</a></li>
+                                    </ul>
+                                </li>
+                                    <li>Hilfe</li>
+                                <li>
+                                    <ul class="list-unstyled ml-3">
+                                                        <li><a href="https://weblearn.fh-kufstein.ac.at/course/view.php?id=240" title="Allgemeine Hilfe beim Login">Hilfe zum Login</a></li>
+                                                        <li><a href="mailto:itsupport@fh-kufstein.ac.at?subject=Weblearn%20%28Moodle%29%20Zugangsdaten%20vergessen" title="Ticket an IT Support zwecks vergessener Zugangsdaten senden">Weblearn (Moodle) Zugangsdaten vergessen</a></li>
+                                                        <li><a href="mailto:elearning@fh-kufstein.ac.at?subject=Weblearn%20%28Moodle%29%20Ticket" title="Ticket an den eLearning Support senden">eLearning Ticket Support</a></li>
+                                                        <li><a href="https://weblearn.fh-kufstein.ac.at/course/view.php?id=2817" title="Client für den Remote eLearning Support">AnyDesk Remote Support</a></li>
+                                                        <li><a href="https://docs.moodle.org/33/de/Hauptseite" title="Hier finden Sie die Moodle Hilfe und Dokumentation">Weblearn (Moodle) Hilfe und Dokumentation</a></li>
+                                    </ul>
+                                </li>
+                                    <li><a href="#" title="Sprache">Deutsch ‎(de)‎</a></li>
+                                <li>
+                                    <ul class="list-unstyled ml-3">
+                                                        <li><a href="https://weblearn.fh-kufstein.ac.at/mod/resource/view.php?id=67640&amp;lang=de" title="Deutsch ‎(de)‎">Deutsch ‎(de)‎</a></li>
+                                                        <li><a href="https://weblearn.fh-kufstein.ac.at/mod/resource/view.php?id=67640&amp;lang=en" title="English ‎(en)‎">English ‎(en)‎</a></li>
+                                    </ul>
+                                </li>
+                </ul>
+        </nav>
+        <div><div style="float:right;"><a href="https://www.fh-kufstein.ac.at/Anfahrt" target="_blank" style="color:white;font-weight:bold;margin-right:30px;margin-left:30px;">Anfahrt</a> <a href="https://www.fh-kufstein.ac.at/Impressum" target="_blank" style="color:white;font-weight:bold;">Impressum</a></div>© <span style="font-weight:bold;">FH Kufstein Tirol</span> // Andreas Hofer-Straße 7 // A-6330 Kufstein // Tel. +43 5372 71819 // <a href="mailto:info@fh-kufstein.ac.at" style="color:white;">info@fh-kufstein.ac.at</a></div>
+        <a href="https://download.moodle.org/mobile?version=2018051708.01&amp;lang=de">Laden Sie die mobile App</a>
+        <script type="text/javascript">
+//<![CDATA[
+var require = {
+    baseUrl : 'https://weblearn.fh-kufstein.ac.at/lib/requirejs.php/1569507974/',
+    // We only support AMD modules with an explicit define() statement.
+    enforceDefine: true,
+    skipDataMain: true,
+    waitSeconds : 0,
+
+    paths: {
+        jquery: 'https://weblearn.fh-kufstein.ac.at/lib/javascript.php/1569507974/lib/jquery/jquery-3.2.1.min',
+        jqueryui: 'https://weblearn.fh-kufstein.ac.at/lib/javascript.php/1569507974/lib/jquery/ui-1.12.1/jquery-ui.min',
+        jqueryprivate: 'https://weblearn.fh-kufstein.ac.at/lib/javascript.php/1569507974/lib/requirejs/jquery-private'
+    },
+
+    // Custom jquery config map.
+    map: {
+      // '*' means all modules will get 'jqueryprivate'
+      // for their 'jquery' dependency.
+      '*': { jquery: 'jqueryprivate' },
+      // Stub module for 'process'. This is a workaround for a bug in MathJax (see MDL-60458).
+      '*': { process: 'core/first' },
+
+      // 'jquery-private' wants the real jQuery module
+      // though. If this line was not here, there would
+      // be an unresolvable cyclic dependency.
+      jqueryprivate: { jquery: 'jquery' }
+    }
+};
+
+//]]>
+</script>
+<script type="text/javascript" src="https://weblearn.fh-kufstein.ac.at/lib/javascript.php/1569507974/lib/requirejs/require.min.js"></script>
+<script type="text/javascript">
+//<![CDATA[
+M.util.js_pending("core/first");require(['core/first'], function() {
+;
+require(["media_videojs/loader"], function(loader) {
+    loader.setUp(function(videojs) {
+        videojs.options.flash.swf = "https://weblearn.fh-kufstein.ac.at/media/player/videojs/videojs/video-js.swf";
+videojs.addLanguage("de",{
+ "Play": "Wiedergabe",
+ "Pause": "Pause",
+ "Replay": "Erneut abspielen",
+ "Current Time": "Aktueller Zeitpunkt",
+ "Duration Time": "Dauer",
+ "Remaining Time": "Verbleibende Zeit",
+ "Stream Type": "Streamtyp",
+ "LIVE": "LIVE",
+ "Loaded": "Geladen",
+ "Progress": "Status",
+ "Fullscreen": "Vollbild",
+ "Non-Fullscreen": "Kein Vollbild",
+ "Mute": "Ton aus",
+ "Unmute": "Ton ein",
+ "Playback Rate": "Wiedergabegeschwindigkeit",
+ "Subtitles": "Untertitel",
+ "subtitles off": "Untertitel aus",
+ "Captions": "Untertitel",
+ "captions off": "Untertitel aus",
+ "Chapters": "Kapitel",
+ "You aborted the media playback": "Sie haben die Videowiedergabe abgebrochen.",
+ "A network error caused the media download to fail part-way.": "Der Videodownload ist aufgrund eines Netzwerkfehlers fehlgeschlagen.",
+ "The media could not be loaded, either because the server or network failed or because the format is not supported.": "Das Video konnte nicht geladen werden, da entweder ein Server- oder Netzwerkfehler auftrat oder das Format nicht unterstützt wird.",
+ "The media playback was aborted due to a corruption problem or because the media used features your browser did not support.": "Die Videowiedergabe wurde entweder wegen eines Problems mit einem beschädigten Video oder wegen verwendeten Funktionen, die vom Browser nicht unterstützt werden, abgebrochen.",
+ "No compatible source was found for this media.": "Für dieses Video wurde keine kompatible Quelle gefunden.",
+ "Play Video": "Video abspielen",
+ "Close": "Schließen",
+ "Modal Window": "Modales Fenster",
+ "This is a modal window": "Dies ist ein modales Fenster",
+ "This modal can be closed by pressing the Escape key or activating the close button.": "Durch Drücken der Esc-Taste bzw. Betätigung der Schaltfläche \"Schließen\" wird dieses modale Fenster geschlossen.",
+ ", opens captions settings dialog": ", öffnet Einstellungen für Untertitel",
+ ", opens subtitles settings dialog": ", öffnet Einstellungen für Untertitel",
+ ", selected": ", ausgewählt",
+ "captions settings": "Untertiteleinstellungen",
+ "subtitles settings": "Untertiteleinstellungen",
+ "descriptions settings": "Einstellungen für Beschreibungen",
+ "Close Modal Dialog": "Modales Fenster schließen",
+ "Descriptions": "Beschreibungen",
+ "descriptions off": "Beschreibungen aus",
+ "The media is encrypted and we do not have the keys to decrypt it.": "Die Entschlüsselungsschlüssel für den verschlüsselten Medieninhalt sind nicht verfügbar.",
+ ", opens descriptions settings dialog": ", öffnet Einstellungen für Beschreibungen",
+ "Audio Track": "Tonspur",
+ "Text": "Schrift",
+ "White": "Weiß",
+ "Black": "Schwarz",
+ "Red": "Rot",
+ "Green": "Grün",
+ "Blue": "Blau",
+ "Yellow": "Gelb",
+ "Magenta": "Magenta",
+ "Cyan": "Türkis",
+ "Background": "Hintergrund",
+ "Window": "Fenster",
+ "Transparent": "Durchsichtig",
+ "Semi-Transparent": "Halbdurchsichtig",
+ "Opaque": "Undurchsictig",
+ "Font Size": "Schriftgröße",
+ "Text Edge Style": "Textkantenstil",
+ "None": "Kein",
+ "Raised": "Erhoben",
+ "Depressed": "Gedrückt",
+ "Uniform": "Uniform",
+ "Dropshadow": "Schlagschatten",
+ "Font Family": "Schristfamilie",
+ "Proportional Sans-Serif": "Proportionale Sans-Serif",
+ "Monospace Sans-Serif": "Monospace Sans-Serif",
+ "Proportional Serif": "Proportionale Serif",
+ "Monospace Serif": "Monospace Serif",
+ "Casual": "Zwanglos",
+ "Script": "Schreibeschrift",
+ "Small Caps": "Small-Caps",
+ "Reset": "Zurücksetzen",
+ "restore all settings to the default values": "Alle Einstellungen auf die Standardwerte zurücksetzen",
+ "Done": "Fertig",
+ "Caption Settings Dialog": "Einstellungsdialog für Untertitel",
+ "Beginning of dialog window. Escape will cancel and close the window.": "Anfang des Dialogfensters. Esc bricht ab und schließt das Fenster.",
+ "End of dialog window.": "Ende des Dialogfensters.",
+ "Audio Player": "Audio-Player",
+ "Video Player": "Video-Player",
+ "Progress Bar": "Forschrittsbalken",
+ "progress bar timing: currentTime={1} duration={2}": "{1} von {2}",
+ "Volume Level": "Lautstärkestufe"
+});
+
+    });
+});;
+function legacy_activity_onclick_handler_1(e) { e.halt(); window.open('https://weblearn.fh-kufstein.ac.at/mod/resource/view.php?id=67640&redirect=1'); return false; };
+function legacy_activity_onclick_handler_2(e) { e.halt(); window.open('https://weblearn.fh-kufstein.ac.at/mod/resource/view.php?id=67260&redirect=1'); return false; };
+M.util.js_pending('local_boostnavigation/collapsenavdrawernodes');
+require(['local_boostnavigation/collapsenavdrawernodes'], function(amd) {
+    amd.init(["mycourses"]);
+    M.util.js_complete('local_boostnavigation/collapsenavdrawernodes');
+});;
+
+require(['jquery'], function($) {
+    $('#single_select5de22bfdcf6553').change(function() {
+        var ignore = $(this).find(':selected').attr('data-ignore');
+        if (typeof ignore === typeof undefined) {
+            $('#single_select_f5de22bfdcf6552').submit();
+        }
+    });
+});
+;
+
+require(['jquery', 'message_popup/message_popover_controller'], function($, controller) {
+    var container = $('#nav-message-popover-container');
+    var controller = new controller(container);
+    controller.registerEventListeners();
+    controller.registerListNavigationEventListeners();
+});
+;
+
+require(['jquery', 'message_popup/notification_popover_controller'], function($, controller) {
+    var container = $('#nav-notification-popover-container');
+    var controller = new controller(container);
+    controller.registerEventListeners();
+    controller.registerListNavigationEventListeners();
+});
+;
+
+require(['jquery'], function($) {
+    $('#single_select5de22bfdcf65518').change(function() {
+        var ignore = $(this).find(':selected').attr('data-ignore');
+        if (typeof ignore === typeof undefined) {
+            $('#single_select_f5de22bfdcf65517').submit();
+        }
+    });
+});
+;
+
+require(['theme_boost/loader']);
+require(['theme_boost/drawer'], function(mod) {
+    mod.init();
+});
+;
+M.util.js_pending('core/notification');
+require(['core/notification'], function(amd) {
+    amd.init(125118, []);
+    M.util.js_complete('core/notification');
+});;
+M.util.js_pending('core/log');
+require(['core/log'], function(amd) {
+    amd.setConfig({"level":"warn"});
+    M.util.js_complete('core/log');
+});M.util.js_complete("core/first");
+});
+//]]>
+</script>
+<script type="text/javascript">
+//<![CDATA[
+M.str = {"moodle":{"lastmodified":"Zuletzt ge\u00e4ndert","name":"Name","error":"Fehler","info":"Informationen","yes":"Ja","no":"Nein","ok":"OK","cancel":"Abbrechen","confirm":"Best\u00e4tigen","areyousure":"Sind Sie sicher?","closebuttontitle":"Schlie\u00dfen","unknownerror":"Unbekannter Fehler"},"repository":{"type":"Typ","size":"Gr\u00f6\u00dfe","invalidjson":"Ung\u00fcltiger JSON-Text","nofilesattached":"Keine Datei","filepicker":"Dateiauswahl","logout":"Abmelden","nofilesavailable":"Keine Dateien vorhanden","norepositoriesavailable":"Sie k\u00f6nnen hier zur Zeit keine Dateien hochladen.","fileexistsdialogheader":"Datei bereits vorhanden","fileexistsdialog_editor":"Eine Datei mit diesem Namen wurde bereits an den Text angeh\u00e4ngt, den Sie gerade bearbeiten","fileexistsdialog_filemanager":"Eine Datei mit diesem Namen wurde bereits an den Text angeh\u00e4ngt","renameto":"Nach '{$a}' umbenennen","referencesexist":"{$a} Aliase\/Verkn\u00fcpfungen zu dieser Datei","select":"W\u00e4hlen Sie"},"admin":{"confirmdeletecomments":"M\u00f6chten Sie die Kommentare wirklich l\u00f6schen?","confirmation":"Best\u00e4tigung"}};
+//]]>
+</script>
+<script type="text/javascript">
+//<![CDATA[
+(function() {Y.use("moodle-filter_mathjaxloader-loader",function() {M.filter_mathjaxloader.configure({"mathjaxconfig":"\nMathJax.Hub.Config({\n    config: [\"Accessible.js\", \"Safe.js\"],\n    errorSettings: { message: [\"!\"] },\n    skipStartupTypeset: true,\n    messageStyle: \"none\"\n});\n","lang":"de"});
+});
+Y.use("moodle-filter_glossary-autolinker",function() {M.filter_glossary.init_filter_autolinking({"courseid":0});
+});
+M.util.help_popups.setup(Y);
+ M.util.js_pending('random5de22bfdcf65519'); Y.on('domready', function() { M.util.js_complete("init");  M.util.js_complete('random5de22bfdcf65519'); });
+})();
+//]]>
+</script>
+
+    </div>
+</footer>
+</body>
+</html>

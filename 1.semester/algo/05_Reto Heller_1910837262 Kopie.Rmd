@@ -1,0 +1,608 @@
+---
+title: "Regression und Prädiktion"
+author: "Reto Heller 1910837262"
+date: '2019-01-01 (updated: `r Sys.Date()`)'
+subtitle: Algorithmik und Statistik 1
+institute: FH Kufstein
+---
+
+# Aufgabe 1: Lineare Regression [5 Punkte]
+In dieser Übung implementieren Sie ein einfaches lineares Regressionsmodell. Machen Sie sich bereit für Vorhersagen, visualisieren Sie die Modellanpassung und analysieren Sie die Formel, mit der Sie Ihre Anpassung generieren.
+
+Mittlerweile sind Sie wahrscheinlich mit dem Wetterdatensatz, den wir verwenden werden, zufrieden. Ihre abhängige Variable ist die Humidity3pm-Funktion.
+
+## Anweisungen
+- Weisen Sie der Variablen linear_model ein lm()-Objekt zu; passen Sie Ihr Modell in die nächste Zeile.
+- Weisen Sie die Vorhersagen aus Ihrem Modell mit der Funktion predict() `preds` zu; geben Sie die Ergebnisse aus.
+- Visualisieren Sie die Beziehung zwischen X und y mit der scatter()-Funktion und zeichnen Sie dann Ihre Vorhersagen darauf auf.
+- Weisen Sie den Koeffizienten für Ihre unabhängige Variable zu und geben Sie ihn aus; was bedeutet das?
+```{r}
+library(dplyr)
+library(ggplot2)
+library(car)
+library(caret)
+```
+
+
+```{r}
+set.seed(1910837262)
+#weatherAUS$Humidity9am # FYI X
+#weather$Humidity3pm # Y
+library(moderndive)
+library(readr)
+weatherAUS <- read_csv("data/weatherAUS.csv", quoted_na = FALSE)
+
+weatherAUS_cleaned <- weatherAUS %>%
+  select(Humidity9am, Humidity3pm)
+
+weatherAUS_cleaned <- na.omit(weatherAUS_cleaned)
+sample <- weatherAUS_cleaned %>%
+  rep_sample_n(3000, replace = FALSE)
+# Create and fit your linear regression model
+linear_model <- lm(Humidity3pm ~ Humidity9am, data = weatherAUS_cleaned)
+# Assign and print predictions
+preds_hum <- predict(linear_model)
+preds_hum_sample <- predict(linear_model, sample )
+#preds
+print(preds_hum)
+
+# Plot your fit to visualize your model
+#Samplen
+ggplot(sample, mapping = aes(x = sample$Humidity9am, y = sample$Humidity3pm)) +
+  geom_point(colour = "red") +
+  geom_line( aes(y = preds_hum_sample), size = 1 )
+
+#Es handelt sich hier um heteroskedaste Daten, aber nicht so stark heteroskedast, wie es ursprünglich vermuten ließ.
+
+# Assign and print coefficient 
+coef_lm <- linear_model$coefficients
+coef_lm
+#Der Intercept liegt bei 1.44 und die Steigung beträgt 0.726 pro Erhöhung der Vormittags-Luftfeuchtigkeit um 1. .
+```
+
+
+
+
+# Aufgabe 2: Evaluierung der Regression [4 Punkte]
+Lassen Sie uns das lineare Regressionsmodell, das Sie mit lm() erstellt und trainiert haben, erneut besuchen. Bewerten Sie die Leistung Ihres Modells, das als `linear_model` importiert sein muss, damit Sie es aufrufen können.
+
+Kommen wir zur Berechnung der R-Quadrat-, mittleren quadratischen Fehler- und mittleren absoluten Fehlerwerte für das Modell.
+
+## Anweisungen
+- Berechnen und geben Sie die Ergebnisse des R-Quadrats unseres Modells aus.
+- Berechnen und geben Sie die Ergebnisse des Mean_squared Errors unseres Modells aus.
+- Berechnen und geben Sie die Ergebnisse des Mean_absolute Errors unseres Modells aus.
+- Interpretieren Sie die Regression
+
+```{r}
+# R-squared score
+#summary(linear_model)
+residuals_linear_model <- residuals(linear_model)
+mean_y <- mean(weatherAUS_cleaned$Humidity3pm)
+#Erstellen eines Übersichts Dataframe
+linear_model_dataframe <- data.frame(weatherAUS_cleaned$Humidity9am, weatherAUS_cleaned$Humidity3pm, preds_hum, residuals_linear_model, resdiduals_squared = residuals_linear_model** 2, variation = (weatherAUS_cleaned$Humidity3pm - mean_y)**2)
+
+#R2
+r2 <- 1-(sum(linear_model_dataframe$resdiduals_squared)/sum(linear_model_dataframe$variation))
+r2
+#0.4454
+#Anhand des linearen Modells können wir bereits 44,5 % der Daten erklären.
+# Mean squared error
+MSE <- sum(linear_model_dataframe$resdiduals_squared)/length(linear_model_dataframe$resdiduals_squared)
+MSE
+RMSE <- sqrt(MSE)
+RMSE
+# Mean absolute error
+MAE <- sum(abs(residuals_linear_model))/length(residuals_linear_model)
+MAE
+```
+```{r}
+summary(linear_model)
+#Das lineare Modell, um anhand der Luftfeuchtigkeit um 9 Uhr vormittags die Luftfeuchtigkeit um 3 Uhr nachmittags vorherzusagen, hat einen Intercept von 1.447 und einem Koeffizienten von 0.726. Der Median der residuals liegt bei -0.79. Der R-Suared bei bei 0.445, also mit dem linearen Model können 44,5 % der Werte erklärt werden. Der t-Wert vom Koeffizienten liegt bei 332,8.
+```
+
+
+
+
+
+
+# Aufgabe 3: Behandlung von Nullwerten [3 Punkte]
+Lassen Sie uns üben, mit Nullwerten mit unserem Laptops-Datensatz umzugehen, mit dem wir zuvor gearbeitet haben. Sie werden Zeilen mit Nullwerten identifizieren und dann verschiedene Techniken ausprobieren, um dieses Problem zu lösen.
+
+## Anweisungen
+- Identifizieren und drucken Sie die Zeilen mit Nullwerten, indem Sie Ihren Data.frame mit der is.null() Funktion schneiden.
+- Impute 0 für fehlende Preise; geben Sie den Head aus.
+- Passen Sie den Code an, dass der Preis mit dem Median aufgefüllt wird. geben Sie den Head aus.
+
+```{r}
+library(imputeTS)
+load("~/Desktop/FH Kufstein Master DSIA/1. Semester/Algorithmik und Statistik/Lab/20200111/05_regression-assign/data/laptops_unclean.gz")
+laptops_uncleaned <- laptops_unclean
+# Identify and print the the rows with null values
+nulls <- subset(laptops_uncleaned, is.na(laptops_uncleaned)) 
+# Impute constant value 0 and print the head
+laptops_impute_0 <- laptops_uncleaned %>%
+        mutate(Price_euros = na_replace(laptops_uncleaned$Price_euros, 0))
+head(laptops_impute_0)
+# Impute median price and print the head
+laptops_impute_med <-  laptops_uncleaned %>%
+        mutate(Price_euros = na_replace(laptops_uncleaned$Price_euros, median(laptops_uncleaned$Price_euros, na.rm = TRUE)))
+head(laptops_impute_med)
+# Drop each row with a null value and print the head
+
+laptops_cleaned <- na.omit(laptops_uncleaned)
+head(laptops_cleaned)
+
+#Der Umgang mit Nullwerte und NA's ist sehr wichtig. Löscht man die Zeilen mit Nullwerten oder fehlenden Werten aus dem Datensatz heraus, kann es sein, dass das Sample zu klein wird und zu wenig Aussagekraft hat. Fügt man stattdessen den Median ein statt den Nullwerten, verringert dies die Varianz und verzehrt das Ergebnis weniger. Füllt man fehlende Werte einfach mit Nullen aus, kann dies das Ergebnis deutlich verzerren.
+```
+
+
+
+
+# Aufgabe 4: Identifizierung von Ausreißern [4 Punkte]
+Lassen Sie uns mit unserem Laptops-Datensatz weitermachen und einige Ausreißer bekämpfen, die sich verstecken. In dieser Übung werden wir uns an die  Technik halten, anhand von Standardabweichungen zur Identifizierung von Extremwerten, da diese Methode in der Praxis häufiger verwendet wird.
+
+Sie berechnen die deskriptiven Statistiken und Ausreißergrenzen und identifizieren dann die Zeilen mit ihnen, bevor Sie sie aus dem Dataset entfernen. Sie werden hier hauptsächlich mit der Spalte Preis arbeiten.
+
+## Anweisungen
+- Berechnen Sie den Mittelwert und die Standardabweichung der Preis-Spalte
+- Berechnen Sie die oberen und unteren Grenzen von akzeptablen Werten mit 3 Standardabweichungen
+- Berechnen Sie die Outliers, die ausserhalb liegen
+- Verwerfen Sie die Outliers
+
+```{r}
+# Calculate the mean and std
+laptops <- read_csv("data/laptops.csv")
+laptops_price_mean <- mean(laptops$Price_euros)
+laptops_price_std <- sd(laptops$Price_euros)
+# Compute and print the upper and lower threshold
+cut_off_upper <- laptops_price_mean + (3 * laptops_price_std)
+cut_off_lower <- laptops_price_mean - (3 * laptops_price_std)
+# Identify and print rows with outliers
+outliers <- laptops %>%
+  filter(laptops$Price_euros > cut_off_upper | laptops$Price_euros < cut_off_lower)
+
+# Drop the rows from the dataset
+laptops <- laptops %>%
+  filter(laptops$Price_euros < cut_off_upper | laptops$Price_euros > cut_off_lower)
+#Outlier können Probleme der Erstellung von Regressionsmodellen verursachen, da der tatsächliche Y-Wert weit entfernt vom berechnent Y-Wert ist. Deshalb macht es in den meisten Fällen Sinn, die Werte, die außerhalb von 3 Standardabweichungen zu entfernen. Dafür besteht dann aber die Gefahr, dass Schwarze Schwäne übersehen werden.
+```
+
+
+
+# Aufgabe 5: Visualisierung des Tradeoffs [3 Punkte]
+Wir wissen, dass der Bias-Varianz-Kompromiss als Grundlage für die Behandlung von Problemen wie **Over- und under-Fitting** beim maschinellen Lernen dient.
+
+In dieser Übung untersuchen Sie unseren Wetterdatensatz ein letztes Mal, indem Sie den Unterschied zwischen Modellen mit hohem Bias und hoher Varianz anhand der bereits importierten Variablen visualisieren.
+
+Zur Erinnerung: Wir verwenden die `Temp9am`-Feature, um unsere abhängige Variable, das `Temp3pm`-Feature, vorherzusagen. 
+
+## Anweisungen
+- Visualisieren Sie die Beziehung zwischen den Variablen mit einem Scatterplot
+- Visualisieren Sie die Vorhersagen `pred`
+- Visualisieren Sie die Vorhersagen 
+
+```{r}
+X <- c(8.6, 14.2, 15.1, 17.5, 16.2,  5.8, 20.3,  2.5, 15.4, 22.2, 30.4,
+       11. , 21.7, 25.5, 13.4, 25.2, 10.6, 26.7, 20.5)
+y <- c(8.6, 14.2, 15.1, 17.5, 16.2,  5.8, 20.3,  2.5, 15.4, 22.2, 30.4,
+       11. , 21.7, 25.5, 13.4, 25.2, 10.6, 26.7, 20.5)
+preds <- c(8.6, 14.2, 15.1, 17.5, 16.2,  5.8, 20.3,  2.5, 15.4, 22.2, 30.4,
+       11. , 21.7, 25.5, 13.4, 25.2, 10.6, 26.7, 20.5)
+preds2 <- c(15.53525198, 15.53535007, 15.55148727, 15.72947367, 15.82907881,
+       17.73831971, 19.20364488, 21.48164064, 22.37381012, 24.95533779,
+       28.91800569, 28.68313159, 28.23278614, 26.59000134, 27.16358784,
+       31.52912842, 28.1403767 , 22.11067348, 29.29891384)
+# Use X and y to create a scatterplot
+ggplot(mapping = aes(x = X, y = y)) +
+     geom_point()
+#Die beiden Variablen korrlieren perfekt miteinander.
+
+# Add your model predictions to the scatter plot with preds (line plot)
+ggplot(mapping = aes(x = X, y = y)) +
+     geom_point(colour = "red")+
+     geom_line( aes(y = preds), size = 1, colour = "green")+
+     geom_line( aes(y = preds2), size = 1, colour = "blue")
+
+
+
+#ggplot(mapping = aes(x = X, y = y)) +
+     #geom_point(colour = "red")+
+     #geom_line( aes(y = preds2), size = 1)
+
+# Add the higher-complexity model predictions as well
+weatherAUS_cleaned_temp <- weatherAUS %>%
+  select(Temp9am, Temp3pm)
+
+weatherAUS_cleaned_temp <- na.omit(weatherAUS_cleaned_temp)
+linear_model_temp <- lm(Temp3pm ~ Temp9am, data = weatherAUS_cleaned_temp)
+
+preds_temp <- predict(linear_model_temp)
+ggplot(data = weatherAUS_cleaned_temp, mapping = aes(x = weatherAUS_cleaned_temp$Temp9am, y = weatherAUS_cleaned_temp$Temp3pm)) +
+  geom_point(colour = "red")+
+  geom_line( aes(y = preds_temp), size = 1)
+
+```
+
+
+
+
+# Aufgabe 6 [26 Punkte]
+Für diese Aufgabe werden wir den Luftqualitätsdatensatz `airquality` verwenden, der ein Standarddatensatz in R ist.
+
+## 6.1 Data Cleaning [1 Punkt]
+Dieser Datensatz enthält einige fehlende Daten. Der Einfachheit halber werden wir sie entfernen. Denken Sie darüber nach, warum dies eine vernünftige Sache sein kann oder auch nicht. (Wir werden später auf diese Idee zurückkommen. Für den Moment wollen wir uns auf die Modellierung konzentrieren)
+
+```{r}
+airquality_cleaned = na.omit(airquality)
+#Das Entfernen von fehlenden Daten kann sinnvoll sein, wenn der Datensatz noch groß genug ist und sich das Ergebnis durch das Weglassen nicht verzehrt.
+```
+
+
+
+
+## 6.2 Test-Train Split [2 Punkte]
+Jetzt wollen wir einen Testzug mit der Aufteilung der Daten durchführen. Das heißt, wir wollen einen Trainingsdatensatz zur Anpassung unserer Modelle und einen Testdatensatz zur Auswertung unserer Modelle. Da diese Aufteilung auf zufällig ausgewählten Beobachtungen im Datensatz basiert, setzen wir zunächst einen Seed-Wert, um die gleiche Aufteilung wieder reproduzieren zu können.
+
+```{r}
+library(caTools)
+set.seed(1910837262) # Your id
+df_sort = sort(sample(nrow(airquality_cleaned), nrow(airquality_cleaned)*.7))
+trn_data <- airquality_cleaned[df_sort,] # 70% 
+
+tst_data <- airquality_cleaned[-df_sort, ]# 30%
+train_index <- as.numeric(rownames(tst_data))
+nobs_tst <- nrow(tst_data)
+nobs_tst
+
+```
+Wie viele Beobachtungen werden in der Testmenge verwendet?
+
+
+## 6.3 EDA [4 Punkte]
+Wir haben bereits begonnen, mit diesen Daten zu arbeiten, aber wir sollten wirklich einen Schritt zurücktreten und uns eine Frage stellen. **Was sind diese Daten?** Wann immer Sie sich diese Frage stellen, sollten Sie sich die Daten "anschauen". Man sollte drei Dinge tun:
+
+- Lesen Sie die Metadaten, in diesem Fall die R-Dokumentation.
+  - Woher kommen diese Daten?
+```{r}
+# Die Daten wurden im Jahre 1973 in New York gemessen und die Daten stammen vom Ney York State Department of Conservation und dem National Weather Service.
+```
+  
+  - Was ist eine Beobachtung in diesem Datensatz?
+  - Was sind die Variablen in diesem Datensatz?
+```{r}
+#Ein Datensatz besteht aus dem mittleren Ozonwert von 13 bis 15 Uhr in parts per billion.
+#Weiters aus der Solar Radiation in Langleys Frequenzband zwischen 4000 und 7700 ANgstroms, die zwischen 8 und 12 Uhr am Central Park gemessen wurden.
+#Zudem die mittlere Windgeschwindigkeit zwischen 7 und 10 Uhr am Flughafen LaGuardia.
+#Und noch die Tageshöchsttemperatur in Fahrenheit, gemessen am LaGuardia Flughafen.
+#Mitangebebn wird noch der Monat und der jeweilige Tag.
+```
+  
+- Betrachten Sie die Daten in tabellarischer Form. Dies kann durch Anklicken des Datensatzes im RStudio Enviroment-Panel oder durch Verwendung des View() Befehls auf dem Datensatz erfolgen.
+  - Was ist der Typ der einzelnen Variablen?
+```{r}
+#typeof(airquality$Ozone)
+#typeof(airquality$Temp)
+#typeof(airquality$Solar.R)
+#typeof(airquality$Month)
+#typeof(airquality$Wind)
+#typeof(airquality$Day)
+
+#Bis auf die Variable Widn handelt es sich bei allen Variablen um Integer. Wind ist ein Double und Kategorische Variablen liegen keine vor.
+```
+  
+  - Sind kategorische Variablen als Faktoren kodiert?
+  
+- Stellen Sie die Daten dar (Plots).
+
+**Beantworten Sie die ersten beiden Fragen!**
+
+Erstellen Sie ein Diagramm, das alle möglichen Streudiagramme von zwei Variablen im Trainingsdatensatz zeigt.
+
+```{r}
+# plot here pairplot
+library(GGally)
+ggpairs(trn_data)
+```
+
+
+
+Da wir uns auf die Vorhersage von `Ozone` mit Hilfe von `Temp` konzentrieren werden, erstellen Sie eine Streudiagramm, das nur diese Beziehung anhand der Trainingsdaten zeigt
+
+```{r}
+# plot
+
+ggplot(trn_data, aes(x = trn_data$Temp, y = trn_data$Ozone))+
+  geom_point()
+
+#Das Streudiagramm zeigt, dass wir einen starken Ausreißer haben, der das Ergebnis verzehren kann.
+trn_data_cleaned <- trn_data %>%
+  filter(trn_data$Ozone < 150)
+```
+
+```{r}
+#Plot der Daten ohne Outlier
+ggplot(trn_data_cleaned, aes(x = trn_data_cleaned$Temp, y = trn_data_cleaned$Ozone))+
+  geom_point()
+#Ohne Outlier sind die Daten fast homoskedast.
+```
+
+
+## 6.4 Modelle [6 Punkte]
+Passen Sie insgesamt fünf Polynommodelle an die Trainingsdaten an, die zur Vorhersage von Ozon aus Temp. verwendet werden können. Verwenden Sie Polynomgrade von 1 bis 5.
+
+```{r}
+# Lineares Model (Polynom grad 1)
+mod_1 <- lm(Ozone ~ Temp, data = trn_data)
+summary(mod_1)
+# Interpretation des Outputs von R von Modell 1 (möglichst vollständig/relevant, Koeffizient(en),...)
+
+# Der R-Squared von 0.485 sagt aus, dass wir anhand dieses Modells bereits 48 % der Daten vorhersagen. Der sehr niedrige p-Value gibt an, dass die Temperatur ein signifikanter Faktor ist um den Ozon-Wert vorherzusagen. Der Intercept von -137 zeigt auch, dass in der Früh es keine Temperaturwerte von unter 50 gibt. Der Median der Residuals liegt bei 1, der Max-Wert der Resdiuals von 121 kommt durch den Ausreißer zustande. Der Koeffizient für dei Temperatur von 2,2 gibt an, dass pro Erhöhung der Temperatur um 1, der Ozonwert um 2,27 steigt.
+
+```
+
+```{r}
+library(broom)
+mod_2 <- lm(Ozone ~ poly(Temp, 2, raw = TRUE), data = trn_data)
+tidy(mod_2)
+#... (ggf. tidy brome)
+mod_3 <- lm(Ozone ~ poly(Temp, 3, raw = TRUE) , data = trn_data)
+tidy(mod_3)
+
+mod_4 <- lm(Ozone ~ poly(Temp, 4, raw = TRUE), data = trn_data)
+tidy(mod_4)
+
+mod_5 <- lm(Ozone ~ poly(Temp, 5, raw = TRUE), data = trn_data)
+tidy(mod_5)
+```
+
+
+
+Vorhersage von Ozon für eine Temperatur von 89 Grad Fahrenheit unter Verwendung des Polynommodells mit drei Graden.
+
+```{r}
+# code
+predict_degree_3_89 <- predict(mod_3, data.frame(Temp = 89))
+predict_degree_3_89
+```
+
+```{r, eval=F}
+
+```
+
+
+Prädiktieren Sie alle 5 Modelle für Train/Test-Daten
+
+```{r}
+# Prediction
+one_pred_train <-predict(mod_1, trn_data)
+one_pred_tst <- predict(mod_1, tst_data)
+#... (verwendung ggf. von broom/tidy)
+two_pred_train <-predict(mod_2, trn_data)
+two_pred_tst <- predict(mod_2, tst_data)
+
+three_pred_train <-predict(mod_3, trn_data)
+three_pred_tst <- predict(mod_3, tst_data)
+
+four_pred_train <-predict(mod_4, trn_data)
+four_pred_tst <- predict(mod_4, tst_data)
+
+five_pred_train <-predict(mod_5, trn_data)
+five_pred_tst <- predict(mod_5, tst_data)
+```
+
+## 6.5  KNN Modell [3 Punkte]
+Verwenden Sie KNN mit `k = 5`, um Vorhersagen für jede der Beobachtungen sowohl im Zug als auch in den Testdatensätzen zu treffen. Speichern Sie die Ergebnisse in Vektoren mit den Namen `knn_pred_trn` und `knn_pred_tst`.
+
+Dazu benötigen Sie die Funktion `knn.reg()` aus dem FNN-Paket. Die knn.reg() unterscheidet sich sehr von der Funktion lm(). Prüfen Sie die Dokumentation!
+
+```{r}
+library(FNN)
+mod_knn <- knn.reg(trn_data$Temp, y = trn_data$Ozone, k = 5)
+knn_pred_trn <- knn.reg(trn_data$Temp, y = trn_data$Ozone, k = 5)$pred
+knn_pred_tst <- knn.reg(tst_data$Temp, y = tst_data$Ozone, k = 5)$pred
+
+knn_resid_trn <- knn.reg(trn_data$Temp, y = trn_data$Ozone, k = 5)$resid
+knn_resid_tst <- knn.reg(tst_data$Temp, y = tst_data$Ozone, k = 5)$resid
+
+```
+
+
+- Beschreiben Sie kurz KNN
+```{r}
+#Das Key Nearest Neighbour Verfahren verwendet zum Vorhersagen die nächsten "Nachbarn", ein Datensatz mit ähnlichen Prädiktorwerten. Der gesamte Datensatz wird nach den k (in unserem Fall 5) nächsten Punkten durchsucht. Es wird die euclidsche oder die Manhatten Distanz zwischen den einzelnen Punkten berechnet. Bei der KNN-Regression wird der Durschnitt der k-nächsten Nachbarn als Vorhersagewert verwendet. Bei der Klassifikation wird der häufigste Wert der k Nachbarn zur Klassifizierung verwendet.
+```
+
+- Interpretieren Sie den Model-Output?
+```{r}
+mod_knn
+#Das Model gibt den PRESS in diesem Fall 29032,24, das entspricht der Summe der quadrierten Residuals. Außerdem wird der R-suared noch ausgegeben, mit dem KNN-Modell können 61 % des Datensatzes erklärt werden.
+```
+
+
+## 6.6 Ergebnisse [3 Punkte]
+Berechnen Sie sowohl den Trainings- als auch den Test-RMSE für die obigen Modelle unter Verwendung der von Ihnen gespeicherten Vorhersagen
+
+```{r}
+rmse_trn_1 <- sqrt(mean((trn_data$Ozone - predict(mod_1, trn_data)) ^ 2))
+rmse_tst_1 <- sqrt(mean((tst_data$Ozone - predict(mod_1, tst_data)) ^ 2)) 
+
+rmse_trn_2 <- sqrt(mean((trn_data$Ozone - predict(mod_2, trn_data)) ^ 2))
+rmse_tst_2 <- sqrt(mean((tst_data$Ozone - predict(mod_2, tst_data)) ^ 2)) 
+
+rmse_trn_3 <- sqrt(mean((trn_data$Ozone - predict(mod_3, trn_data)) ^ 2))
+rmse_tst_3 <- sqrt(mean((tst_data$Ozone - predict(mod_3, tst_data)) ^ 2)) 
+
+rmse_trn_4 <- sqrt(mean((trn_data$Ozone - predict(mod_4, trn_data)) ^ 2))
+rmse_tst_4 <- sqrt(mean((tst_data$Ozone - predict(mod_4, tst_data)) ^ 2)) 
+
+rmse_trn_5 <- sqrt(mean((trn_data$Ozone - predict(mod_5, trn_data)) ^ 2))
+rmse_tst_5 <- sqrt(mean((tst_data$Ozone - predict(mod_5, tst_data)) ^ 2)) 
+
+rmse_trn_knn <- sqrt(mean((knn_resid_trn)^ 2))
+rmse_tst_knn <- sqrt(mean((knn_resid_tst)^ 2))
+#...
+```
+
+
+Berechnen Sie die R2 Scores der Modelle
+
+```{r}
+r2_trn_1 <- summary(mod_1)$r.squared
+r2_tst_1 <- summary(lm(Ozone ~ Temp, data = tst_data))$r.squared
+
+r2_trn_2 <- summary(mod_2)$r.squared
+r2_tst_2 <- summary(lm(Ozone ~ poly(Temp,2), data = tst_data))$r.squared
+
+r2_trn_3 <- summary(mod_3)$r.squared
+r2_tst_3 <- summary(lm(Ozone ~ poly(Temp,3), data = tst_data))$r.squared
+
+r2_trn_4 <- summary(mod_4)$r.squared
+r2_tst_4 <- summary(lm(Ozone ~ poly(Temp,4), data = tst_data))$r.squared
+
+r2_trn_5 <- summary(mod_5)$r.squared
+r2_tst_5 <- summary(lm(Ozone ~ poly(Temp,5), data = tst_data))$r.squared
+
+r2_trn_knn <- knn.reg(trn_data$Temp, y = trn_data$Ozone, k = 5)$R2Pred
+r2_tst_knn <- knn.reg(tst_data$Temp, y = tst_data$Ozone, k = 5)$R2Pred
+#...
+```
+
+
+
+Erstellen Sie eine Tabelle, die die Ergebnisse der einzelnen Modellanpassungen zusammenfasst. (Die fünf Polynommodelle und das einzelne KNN-Modell.) Notieren Sie für jedes Modell den Modelltyp, den Wert des Abstimmparameters, den Zug-RMSE und den Test-RMSE. (Betrachten Sie den Polynomgrad als Abstimmungsparameter.) Das Ergebnis sollte eine Tabelle mit einer Überschrift, sechs Zeilen und vier Spalten sein. Blenden Sie im endgültigen gerenderten Dokument den Code aus, der zur Erstellung der Tabelle verwendet wurde.
+
+Hinweis: Erstellen Sie zuerst einen Datenrahmen und verwenden Sie dann die kable() Funktion aus dem knitr-Paket. 
+
+```{r echo=FALSE}
+library(knitr)
+library(kableExtra)
+
+data_overview <- data.frame(Modelltyp = c("Regression", "Regression", "Regression", "Regression", "Regression", "KNN"), Abstimmungsparameter = c("Lineare Regression", "Polynom Regression 2. Grades", "Polynom Regression 3. Grades", "Polynom Regression 4. Grades", "Polynom Regression 5. Grades", "K=5"), Train_RMSE = c(rmse_trn_1, rmse_trn_2, rmse_trn_3, rmse_trn_4, rmse_trn_5, rmse_trn_knn), Test_RMSE = c(rmse_tst_1, rmse_tst_2, rmse_tst_3, rmse_tst_4, rmse_tst_5, rmse_tst_knn))
+
+data_overview <- kable(data_overview, caption = "Auswertungstabelle", format = "html")
+data_overview
+```
+
+## 6.7 Plot der Ergebnisse [2 Punkte]
+Stellen Sie die obige Streudiagramm von Ozon gegen die Temperaturform wieder her. Fügen Sie zu dieser Darstellung das Polynommodell hinzu, das am besten funktioniert hat, sowie das angepasste KNN-Modell. Können Sie diese Darstellung im gerenderten Dokument zentrieren? Blenden Sie den Code wieder aus, um die Darstellung zu erstellen.
+
+```{r echo=FALSE}
+ggplot(trn_data, aes(x = trn_data$Temp, y = trn_data$Ozone))+
+  geom_point()+
+  geom_line( aes(y = five_pred_train), size = 1, colour = "blue" )+
+  geom_line( aes(y = knn_pred_trn), size = 1 , colour = "red")+
+  geom_line( aes(y = one_pred_train), size = 1 , colour = "green")
+
+#Der Plot zeigt, dass das Modell 5. Grades an manche Punkte sehr nahe dran kommt, aber auch etwas overfitted. Die KNN-Regression kommt sowohl in der unteren Temperaturregrion als auch bei höheren Temperaturen auf gute Ergebnisse. 
+```
+
+## 6.8 Multiple Prädiktoren [5 Punkte]
+Bisher haben wir nur einen der verfügbaren Prädiktoren verwendet. Warum nicht alle verwenden? (Vielleicht sollten wir aber nur einige davon verwenden... Wir kommen später noch einmal auf diesen Gedanken zurück.)
+
+[Übung] Fitten Sie ein additives lineares Modell mit Ozon als Antwort und den restlichen Variablen als Prädiktoren ein. Berechnen Sie den Test-RMSE für dieses Modell. Verbessert dies die vorherigen Modelle?
+
+```{r}
+# your code
+```
+
+```{r, eval=F}
+add_mod = lm(Ozone ~ Temp + Solar.R + Wind + Month + Day, data = trn_data)
+
+rmse_aad_mod <- sqrt(mean((tst_data$Ozone - predict(add_mod, tst_data)) ^ 2))
+preds_add_mod <- predict(add_mod, trn_data)
+summary(add_mod)
+
+#Das additive Modell kommt auf einen R-Squared von 0,60. Der Koeffizient für die Temperatur liegt bei 1,72, für Wind ist der Koeffizient bei -3,12. Diese beiden Prädiktoren sind für das Modell auch am signifikantesten, da sie den größten t-Wert vorweisen. Der Median der Residuals liegt bei -3,38.
+```
+
+
+- Wie kann man die "ideale" Anzahl von Prädiktoren finden?
+```{r}
+#Grundsätzlich macht es Sinn so viele Prädiktoren wie nötig zu verwenden aber so wenig wie möglich. Da sich mit der Erhöhung der einbezogenen Prädiktoren der AIC-Score oder BIC-Score des Modells verschlechtert. 
+# Eine Möglichkeit ist es schrittweise Variablen hinzuzufügen bzw. wegzulassen und dann zu stoppen, wenn sich das Modell nicht mehr signifikant verbessert.
+```
+```{r}
+
+```
+
+- Welche müssen als "Faktor" behandelt werden? Welche sind sinnvoll? Dummy-Coding
+```{r}
+#Monat und Tag müssten als Faktor behandelt werden, wobei ich es nicht für sinnvoll halte die Spalte Day zu verwenden. Deshalb werde ich nur die Spalte Monat one hot encoden.
+#library(plyr)
+airquality_cleaned$Month <- as.factor(airquality_cleaned$Month)
+dummy <- dummyVars( ~ Month, data = airquality_cleaned)
+
+encoded_month <- data.frame(predict(dummy, newdata = airquality_cleaned))
+
+#Datensatz mit der Spalte Monat als encoded.
+encoded_airquality <- cbind(airquality_cleaned, encoded_month) %>%
+  select(-Month.5)
+  
+
+
+```
+```{r}
+
+```
+
+- Welche Prädiktoren sind Korreliert? Wenn ja, welche? Wenn nein, warum (Plot)?
+```{r}
+
+ggpairs(airquality_cleaned)
+```
+```{r}
+#Von den Prädiktoren korrelieren Wind und Temperatur negativ mit einander. Wind weist auch eine negative Korrelation mit dem Ozon vor. Die Temperatur korreliert positiv mit dem Ozonwert. Die Monate korrelieren auch noch positiv mit der Temperatur. Der Tag weist keine Korrelation mit den anderen Variablen auf und kann auch deshalb weggelassen werden. Zudem korreliert die Sonneneinstrahlung noch leicht positiv mit dem Ozonwert. Da wir unter den Prädiktoren aber keine perfekte Korrelation vorliegen haben, liegt auch keine Multikollinearität vor.
+
+
+```
+
+- Gibt es Confounder? Wenn ja, welche? Wenn nein, warum (Plot)?
+```{r}
+add_mod_confounder <- lm(Ozone ~ Wind + Temp, data = trn_data)
+preds_add_mod_confounder <- predict(add_mod_confounder, trn_data)
+
+
+ggplot(trn_data, aes(x = trn_data$Temp, y = trn_data$Ozone))+
+  geom_point()+
+  geom_line( aes(y = one_pred_train), size = 1, colour = "blue" )+
+  geom_line( aes(y = preds_add_mod_confounder), size = 1 , colour = "red")
+
+#Auch der Weglassen des statitisch signifikantesten Prädiktors, der Temperatur, hat sich das Modell nur leicht verändert. Deswegen liegen keine Confounder vor.
+```
+
+
+- Gibt es Interaktionen, die Modelliert werden sollten? Wenn ja, welche? Wenn nein, warum (Plot)?
+```{r}
+interaction_mod <- lm(Ozone ~ Temp*Month + Solar.R + Wind, data = trn_data)
+summary(interaction_mod)
+
+preds_interaction <- predict(interaction_mod, trn_data)
+
+ggplot(trn_data, aes(x = trn_data$Temp, y = trn_data$Ozone))+
+  geom_point()+
+  geom_line( aes(y = preds_interaction), size = 1 , colour = "red")
+```
+
+- Gibt es Outlier, Heteroskedastizität, Nicht-Normalverteilung?
+```{r}
+#Der Ozonwert von 168 ist ein Outlier. Hierbei handelt es sich evtl. um einen Messfehler, da die anderen Prädiktoren an diesem einen Tag keine außergewöhnlich hohen Werte vor weise. Auch wenn es Ende August durchaus die höchsten Ozonwerte gab, weicht dieser doch deutlich von den anderen Werten ab.
+std_resid <- rstandard(mod_1)
+df_test <- data.frame(resid = residuals(mod_1), pred = predict(mod_1), std_residuals =std_resid)
+
+ggplot(df_test, aes(pred, abs(resid)))+
+         geom_point()+
+  geom_smooth()
+
+#Ohne den Outlier sind die Fehler relativ homoskedast.
+```
+
+
+```{r}
+ggplot(df_test, aes(x = std_resid))+
+     geom_histogram(binwidth = 0.5)
+
+#Die Fehler vom linearen Modell sind nicht normalverteilt.
+```
+
+

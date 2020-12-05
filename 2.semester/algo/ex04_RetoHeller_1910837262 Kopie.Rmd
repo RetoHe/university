@@ -1,0 +1,417 @@
+---
+title: "Übung 04"
+author: "Reto Heller 1910837262"
+date: 'Bis: Sonntag, 14. Juni 2020'
+urlcolor: cyan
+---
+
+```{r options, include = FALSE}
+knitr::opts_chunk$set(fig.align = "center")
+```
+
+Bitte um Beachtung der [Übungs-Policy](https://algo2-lab.netlify.com/%C3%BCbungs-policy.html) für genaue Anweisungen und einige Beurteilungsnotizen. Fehler bei der Einhaltung ergeben Punktabzug.
+
+*Bearbeitungszeit*: 5 Std.
+
+***
+
+```{r libraries, warning=FALSE}
+library(ISLR)
+library(caret)
+library(tidyverse)
+library(rsample)
+library(factoextra)
+library(kableExtra)
+```
+
+
+
+## Aufgabe 1
+
+**[10 points]** Für diese Frage verwenden wir die `OJ`Daten aus dem `ISLR`-Paket. Wir werden versuchen, die Variable "Purchase" vorherzusagen. Nachdem Sie `uin` zu Ihrem `UIN` geändert haben, verwenden Sie den folgenden Code, um die Daten aufzuteilen.
+
+```{r, message = FALSE, warning = FALSE}
+uin = 1910837262
+set.seed(uin)
+oj_split = initial_split(OJ, p = 0.5)
+oj_trn = oj_split %>% training()
+oj_tst = oj_split %>% testing()
+```
+
+
+**(a)** Stimmen Sie ein SVM mit linearem Kernel mit 5-facher Cross-Validierung auf die Trainingsdaten ab. Verwenden Sie das folgende Wertgitter für `C`. Berichten Sie die gewählten Werte aller Tuningparameter + Testgenauigkeit.
+
+```{r}
+set.seed(uin)
+cost_param <- (C = c(2 ^ (-5:5)))
+lin_grid = expand.grid(C = seq(0.5,10,.5))
+ctrl <- trainControl(method = "repeatedcv", number =5,repeats=1)
+
+svm_linear <-  train(
+  Purchase ~., data = oj_trn, method = "svmLinear",
+  trControl = ctrl,
+  tuneGrid = lin_grid,
+  preProcess = c("center","scale"))
+
+plot(svm_linear)
+svm_lin_pred <- predict(svm_linear, oj_tst)
+conf_lin =confusionMatrix(svm_lin_pred,oj_tst$Purchase)
+svm_lin_acc <- conf_lin$overall[1]
+```
+
+```{r}
+svm_linear$bestTune
+# Das beste Ergebniss erreicht das lineare SVM Modell bei einem Tuningparameter C von 1,5. Es erreicht eine Trainingsaccuracy von 82,8%.
+```
+
+
+
+**(b)** Abstimmung eines SVM mit Polynomkern auf die Trainingsdaten mittels 5-facher Cross-Validierung. Geben Sie kein Tuning-Grid an. (`caret` wird einen für Sie erstellen.) Berichten Sie die gewählten Werte aller Tuning-Parameter. Berichten Sie über die Genauigkeit der Testdaten.
+
+```{r}
+set.seed(uin)
+svm_poly_1 <- train(
+  Purchase ~., data = oj_trn, method = "svmPoly",
+  trControl = ctrl,
+  preProcess = c("center","scale"))
+
+plot(svm_poly_1)
+
+svm_poly_pred <- predict(svm_poly_1, oj_tst)
+conf_poly =confusionMatrix(svm_poly_pred,oj_tst$Purchase)
+svm_poly_1_acc <- conf_poly$overall[1]
+```
+
+
+```{r}
+#Das beste Modell liegt bei C Parameter 1 und dem Scale-Wert von 0,1. Die Trainingsaccuracy liegt dann bei knapp über 80%.
+svm_poly_1$bestTune
+```
+
+
+
+
+**(c)** Stimmen Sie ein SVM mit Radialkernel mit 5-facher Cross-Validierung auf die Trainingsdaten ab. Verwenden Sie das folgende Wertgitter für `C` und `sigma`. Berichten Sie die gewählten Werte aller Tuningparameter. Berichten Sie über die Genauigkeit der Testdaten. 
+
+```{r}
+set.seed(uin)
+rad_grid = expand.grid(C = c(2 ^ (-2:3)), sigma  = c(2 ^ (-3:1))) # or tidymodels
+
+svm_radial <-  train(
+  Purchase ~., data = oj_trn, method = "svmRadial",
+  trControl = ctrl,
+  tuneGrid = rad_grid,
+  preProcess = c("center","scale"))
+
+plot(svm_radial)
+
+svm_radial_pred <- predict(svm_radial, oj_tst)
+conf_radial =confusionMatrix(svm_radial_pred,oj_tst$Purchase)
+svm_radial_acc <- conf_radial$overall[1]
+```
+
+```{r}
+svm_radial$bestTune
+#Die Tuningparameter des besten Modells sind Sigma 0,125 und C = 1. Es wird eine Trainingsaccuracy von ebenfall knapp über 80% erreicht.
+```
+
+
+**(d)** Stimmen Sie einen Random Forest mit einer 5-fachen Kreuzvalidierung ab. Berichten Sie die gewählten Werte aller Tuningparameter. Berichten Sie über die Genauigkeit der Testdaten.
+
+```{r}
+set.seed(uin)
+rf_model <-  train(
+  Purchase ~., data = oj_trn, method = "rf",
+  trControl = ctrl,
+  preProcess = c("center","scale"))
+
+plot(rf_model)
+
+rf_pred <- predict(rf_model, oj_tst)
+conf_rf =confusionMatrix(rf_pred,oj_tst$Purchase)
+rf_acc <- conf_rf$overall[1]
+
+```
+
+```{r}
+rf_model$bestTune
+# Der Mtry Wert vom besten RF ist bei 9. Die Trainingsaccuracy liegt bei etwas mehr als 78%.
+```
+
+
+
+
+**(e)** Fassen Sie die obigen Genauigkeiten zusammen. Welche Methode hat am besten funktioniert? Warum?
+
+```{r}
+models <- c("SVM", "SVM", "SVM", "RandomForest")
+methods <- c("linear", "polynomial", "radial", "none")
+accs <- c(svm_lin_acc, svm_poly_1_acc, svm_radial_acc, rf_acc)
+summary_results  = data.frame(
+  "model" = models,
+  "Methods" = methods,
+  "test_accuracy" = accs
+)
+
+kable_styling(kable(summary_results, format = "html", digits = 4), full_width = FALSE)
+
+```
+
+```{r}
+# Das beste Modell ist das SVM Modell mit dem polynomialen Kernel. Die Test Accuracies der 4 Modelle sind aber sehr ähnlich zwischen 80% und 82 %.
+```
+
+
+
+# Aufgabe 2
+
+**[10 points]** Verwenden Sie für diese Frage die Daten in `clust_data.csv`. Wir werden versuchen, diese Daten mit $k$-means zu bündeln. Aber, welche $k$ sollen wir verwenden?
+
+```{r}
+library(readr)
+clust_data <- read_csv("clust_data.csv")
+```
+```{r}
+fviz_nbclust(x = clust_data,FUNcluster = kmeans, method = 'wss' )+
+  ggtitle("Ellbow Method scaled")
+
+# In dem Plot sieht man , dass man am besten ein K = 4 wählt, da dort der "Ellbogen" liegt.
+```
+
+
+
+**(a)** Wenden Sie $k$-means 15 mal auf diese Daten an, wobei Sie die Anzahl der Zentren von 1 bis 15 verwenden. Verwenden Sie jedes Mal `nstart = 10` und speichern Sie den Wert `tot.withinss` aus dem resultierenden Objekt. (Hinweis: Schreiben Sie eine for-Schleife.) Die `tot.withinss` misst, wie variabel die Beobachtungen innerhalb eines Clusters sind, das wir gerne niedrig halten würden. Offensichtlich wird dieser Wert also mit mehr Zentren niedriger sein, egal wie viele Cluster es wirklich gibt. Zeichne diesen Wert gegen die Anzahl der Zentren auf. Suchen Sie nach einem "Ellenbogen", der Anzahl der Zentren, in denen die Verbesserung plötzlich wegfällt. Basierend auf dieser Darstellung, wie viele Cluster sollten Ihrer Meinung nach für diese Daten verwendet werden?
+
+
+```{r}
+# Erstes Modell mit K = 1
+wss = kmeans(clust_data, centers=1, nstart = 10)$tot.withinss
+
+for (i in 2:15)
+  wss[i] = kmeans(clust_data, centers=i, nstart = 10)$tot.withinss
+
+```
+
+
+```{r}
+library(ggvis)
+sse = data.frame(c(1:15), c(wss))
+names(sse)[1] = 'Clusters'
+names(sse)[2] = 'SSE'
+sse %>%
+  ggvis(~Clusters, ~SSE) %>%
+  layer_points(fill := 'blue') %>% 
+  layer_lines() %>%
+  set_options(height = 300, width = 400)
+```
+
+
+```{r}
+optimal_k <- 4
+# Meiner Meinung nach sollten 4 CLuster verwendet werden, da danach der SSE nur noch leicht geringer wird.
+```
+
+
+**(b)** Wenden Sie $k$-means für die von Ihnen gewählte Anzahl von Zentren erneut an. Wie viele Beobachtungen werden in jedem Cluster platziert? Was ist der Wert von `tot.withinss`?
+
+
+
+```{r}
+kmeans4 <- kmeans(clust_data, centers=4, nstart = 10)
+cluster_sizes <- kmeans4$size
+#Die Cluster sind total ausgeglichen mit je 25 Zuweisungen pro Cluster
+
+kmeans4_totwss <- kmeans4$tot.withinss
+#Der Total Within Sum of Squares liegt bei 4844,9 .
+```
+
+
+**(c)** Visualisieren Sie diese Daten. Plotten Sie die Daten mit den ersten beiden Variablen und färben Sie die Punkte entsprechend des $k$-means clusterings. Basierend auf diesem Plot, denken Sie, dass Sie eine gute Wahl für die Anzahl der Zentren getroffen haben? (Kurze Erklärung.)
+
+```{r}
+clust1_2 <-clust_data[1:2]
+fviz_cluster(kmeans4, geom = "point", data = clust1_2) + ggtitle(" K = 4")
+
+# Anhand der ersten beiden Variablen macht das K-Means Clustering recht wenig Sinn, weil die Bereiche sehr stark überlappen. Um das Clustering besser verstehen zu können, müssten auch die anderen Variablen mit einbezogen werden.
+```
+
+
+**(d)** Verwenden Sie PCA, um diese Daten zu visualisieren. Plotten Sie die Daten mit den ersten beiden Hauptkomponenten und färben Sie die Punkte entsprechend dem $k$-means Clustering. Basierend auf diesem Plot, denken Sie, dass Sie eine gute Wahl für die Anzahl der Zentren getroffen haben? (Kurze Erklärung.)
+
+```{r}
+
+clust_pcov <- prcomp(clust_data, scale=T)
+#clust_pcov
+
+
+```
+
+```{r}
+biplot(clust_pcov, main = "Biplot Princomp Method", expand = 1, col = c("blue", "red"))
+```
+
+```{r}
+fviz_cluster(kmeans4, geom = "point", data = clust_pcov$x[,1:2]) + ggtitle(" K = 4 mit PCA")
+```
+
+```{r}
+# Der Plot mit dem KMeans Clustering mit den ersten beiden Hauptkomponenten zeigt, dass die 4 Cluster sehr stark voneinander getrennt sind. Es gibt keinen Bereich in dem Cluster überlappen. Somit macht das Clustering Sinn.
+```
+
+
+**(e)** Berechnen Sie den Anteil der Variation, der durch die Hauptkomponenten erklärt wird. Machen Sie eine Darstellung des kumulierten Anteils erklärt. Wie viele Hauptkomponenten sind notwendig, um 95% der Variation der Daten zu erklären?
+
+```{r}
+cum_variance <- cumsum(clust_pcov$sdev^2 / sum(clust_pcov$sdev^2))
+plot(cum_variance, xlab = "PC #", ylab = "Amount of explained variance", main = "Cumulative variance plot")
+```
+
+```{r}
+cum_variance < 0.95
+cum_variance[37]
+
+# Es werden 37 Variablen gebraucht um mehr 95% der Varianz von dem Datensatz zu eklären.
+```
+
+
+
+# Aufgabe 3
+
+**[10 points]** Für diese Frage werden wir auf die `USArrests` Daten aus den Notizen zurückkommen. (Dies ist ein Standarddatensatz von `R`.)
+
+```{r}
+us_arrests <- USArrests
+us_arrests <- na.omit(us_arrests)
+us_arrests_scaled <- scale(us_arrests)
+# preprocessing df - na.omit, scale and unscaled
+```
+
+
+
+
+
+**(a)** Führen Sie hierarchisches Clustering sechsmal durch. Berücksichtigen Sie alle möglichen Kombinationen von Verknüpfungen (Average, Single, Complete) und Datenskalierung. (Skaliert, Nicht skaliert.)
+
+| Linkage  | Scaling |
+|----------|---------|
+| Single   | No      |
+| Average  | No      |
+| Complete | No      |
+| Single   | Yes     |
+| Average  | Yes     |
+| Complete | Yes     |
+
+Schneiden Sie das Dendrogramm jedes Mal auf eine Höhe, die zu vier verschiedenen Clustern führt. Plotten Sie die Ergebnisse mit einer Farbe für jeden Cluster.
+```{r}
+dist_unscaled <- dist(us_arrests, method = "euclidean")
+dist_scaled <- dist(us_arrests_scaled, method = "euclidean")
+```
+
+```{r}
+library(dendextend)
+#single
+data2hc_single <- hclust(dist_unscaled, method = "single")
+data2as_single <- cutree(data2hc_single, k = 4)
+
+dend_data_single <- as.dendrogram(data2hc_single)
+cc <- color_branches(dend_data_single, k=4)
+plot(cc)
+#Mit der Single Methode sind die Cluster sehr stark unbalanciert. Drei CLuster sind fast mit nur einem Bundesstaat befüllt und im vierten CLuster ist der Rest.
+```
+
+```{r}
+#average
+data2hc_avg <- hclust(dist_unscaled, method = "average")
+data2as_avg <- cutree(data2hc_avg, k = 4)
+
+dend_data_avg <- as.dendrogram(data2hc_avg)
+cc_avg <- color_branches(dend_data_avg, k=4)
+plot(cc_avg)
+#Hier sind 3 der 4 Cluster recht gut ausbalanciert. EInzig im roten Cluster sind nur 2 Staaten mit Florida und North Carolina.
+```
+
+```{r}
+#complete
+data2hc_com <- hclust(dist_unscaled, method = "complete")
+data2as_com <- cutree(data2hc_com, k = 4)
+
+dend_data_com <- as.dendrogram(data2hc_com)
+cc_com <- color_branches(dend_data_com, k=4)
+plot(cc_com)
+#Hier sehen wir eine ähnliche Clusteraufteilung wie bei der average Methode.
+```
+
+```{r}
+#single sclaed
+data2hc_single_scaled <- hclust(dist_scaled, method = "single")
+data2as_single_scaled <- cutree(data2hc_single_scaled, k = 4)
+
+dend_data_single_scaled <- as.dendrogram(data2hc_single_scaled)
+cc_single_scaled <- color_branches(dend_data_single_scaled, k=4)
+plot(cc_single_scaled)
+
+```
+
+```{r}
+#average scaled
+data2hc_avg_scaled <- hclust(dist_scaled, method = "average")
+data2as_avg_scaled <- cutree(data2hc_avg_scaled, k = 4)
+
+dend_data_avg_scaled <- as.dendrogram(data2hc_avg_scaled)
+cc_avg_scaled <- color_branches(dend_data_avg_scaled, k=4)
+plot(cc_avg_scaled)
+# Durch die Skalierung wurden die CLuster hier deutlich unausbalancierter als mit den unskalierten Daten.
+```
+
+
+```{r}
+#complete scaled
+data2hc_com_scaled <- hclust(dist_scaled, method = "complete")
+data2as_com_scaled <- cutree(data2hc_com_scaled, k = 4)
+
+dend_data_com_scaled <- as.dendrogram(data2hc_com_scaled)
+cc_com_scaled <- color_branches(dend_data_com_scaled, k=4)
+plot(cc_com_scaled)
+```
+
+
+**(b)** Basierend auf den obigen Plots, erscheint eines der Ergebnisse nützlicher als die anderen? (Es gibt hier keine richtige Antwort.) Wählen Sie Ihren Favoriten. (Nochmals, keine richtige Antwort.)
+
+```{r}
+#Grundsätzlich sieht man keinen großen Unterschied zwischen den skalierten und den unskalierten Modellen. Am unbalanciertesten sind die Cluster mit der Single Methode.Am ausgeglichensten mit der Complete Methode. Der Bundesstaat Alaska wird bei der Single und bei der Average Methode komplett isoliert in ein Cluster gesteckt. Am sinnvollsten halte ich jedoch die Complete Methode.
+```
+
+**(c)** Verwenden Sie die Dokumentation zu `?hclust`, um weitere mögliche Verknüpfungen zu finden. Such dir einen aus und probiere ihn aus. Vergleichen Sie die Ergebnisse mit Ihren Favoriten von **(b)**. Ist es anders?
+
+
+```{r}
+#ward scaled
+data2hc_ward_scaled <- hclust(dist_scaled, method = "ward.D")
+data2as_ward_scaled <- cutree(data2hc_ward_scaled, k = 4)
+
+dend_data_ward_scaled <- as.dendrogram(data2hc_ward_scaled)
+cc_ward_scaled <- color_branches(dend_data_ward_scaled, k=4)
+plot(cc_ward_scaled)
+
+#Ich habe mich für die Ward Methode entschieden, weil es dadurch auch gut balancierte Cluster ergibt. Zudem sind die beiden Größten Cluster sehr stark von einander getrennt.
+```
+
+
+
+
+**(d)** Verwenden Sie die Dokumentation zu `?dist`, um andere mögliche Entfernungsmessungen zu finden. (Wir haben `euklidisch` verwendet.) Wählen Sie eine (nicht `binär`) und versuchen Sie es. Vergleichen Sie die Ergebnisse mit Ihren Favoriten von **(b)**. Ist es anders?
+
+```{r}
+dist_scaled_man <- dist(us_arrests_scaled, method = "man")
+
+#complete scaled manhattan
+data2hc_com_man <- hclust(dist_scaled_man, method = "complete")
+data2as_com_man <- cutree(data2hc_com_man, k = 4)
+
+dend_data_com_man <- as.dendrogram(data2hc_com_man)
+cc_com_man <- color_branches(dend_data_com_man, k=4)
+plot(cc_com_man)
+
+#Der Unterschied bei der Complete Methode zwischen der Euklidschen und der Manhatten Distanz ist fast nicht zu erkennen beim Dendrogramm.
+```
+

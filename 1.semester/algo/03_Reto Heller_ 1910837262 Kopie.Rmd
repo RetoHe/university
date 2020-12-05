@@ -1,0 +1,304 @@
+---
+title: "Daten und Verteilungs-Sampling"
+subtitle: "Algorithmik und Statistik 1"
+author: "Reto Heller 1910837262"
+institute: "FH Kufstein"
+urlcolor: cyan
+date: "2019-01-01 (updated: `r Sys.Date()`)"
+output:
+  html_document
+---
+
+```{r options, include=FALSE}
+
+library(pacman)
+p_load(tidyverse,testthat)
+```
+
+Bitte um Beachtung der [Übungs-Policy](https://weblearn.fh-kufstein.ac.at/mod/page/view.php?id=64482) für genaue Anweisungen und einige Beurteilungsnotizen. Fehler bei der Einhaltung ergeben Punktabzug.
+
+# Aufgabe 1: Bernoulli distribution [3 Punkte]
+Beginnen wir einfach mit der Bernoulli-Distribution. In dieser Übung generieren Sie Beispieldaten für ein Bernoulli-Ereignis und untersuchen dann die erstellte Visualisierung. Bevor wir beginnen, machen Sie sich mit der Funktion `rbinom()` vertraut, die wir in den nächsten Übungen für das Sampling verwenden werden.
+
+Bleiben wir bei dem vorherigen Beispiel, wie man eine faire Münze wirft und das Ergebnis überprüft: Kopf oder Zahl. 
+
+## Anweisungen
+- Setzen Sie den Seed auf Ihre StudentenID, was bewirkt das?
+- Erzeugen Sie mit der Funktion rbinom() ein Sample mit der auf 100 eingestellten Größe und weisen Sie es der Datenvariablen zu.
+- Erstellen und Anzeigen eines Histogramms mit GGPlot; Untersuchen der Form der Verteilung.
+- Was fällt auf? ist die Verteilung fair?
+```{r}
+library(dplyr)
+library(ggplot2)
+```
+
+
+```{r}
+set.seed(1910837262)
+# Durch das Setzen des Seeds wird sichergestellt, dass die Zufallsvariablen gleichbleiben bei mehrfachem Ausführen einer Zufallfunktion.
+# Generate bernoulli data
+
+# bernoulli distribution in r
+data.binom <- data.frame(Würfe =rbinom(100, 1, 0.5))
+
+# Histogramm darstellen
+ggplot(data = data.binom, mapping = aes(x= Würfe)) +
+  geom_histogram(bins = 2, binwidth = 0.5)
+
+# Die verteilung ist meiner Meinung nach fair. Die Differenz zwischen der Anzahl an Würfen mit Kopf und Würfen mit Zahl ist noch im Rahmen.
+```
+
+
+
+
+
+# Aufgabe 2: Binomiale Verteilung [3 Punkte]
+Wie wir in den Folien erläutert haben, wird die Binomialverteilung verwendet, um die Anzahl der erfolgreichen Ergebnisse in Studien zu modellieren, bei denen eine gewisse konstante Erfolgswahrscheinlichkeit besteht.
+
+Für diese Übung sollten Sie ein Spiel in Betracht ziehen, bei dem man versucht, einen Ball in einem Korb zu machen. Man bekommt 10 Schüsse und weiß, dass eine 80%-ige Chance besteht, einen bestimmten Schuss zu machen. Um die Dinge zu vereinfachen, nehmen wir an, dass jede Aufnahme ein unabhängiges Ereignis ist.
+
+## Anweisungen
+
+- Erzeugen Sie einige Daten für die Verteilung mit der Funktion rbinom() mit der Größe 1000; weisen Sie sie der Datenvariablen zu.
+- Zeigen Sie ein Histogramm an; untersuchen Sie die Form der Verteilung.
+- Weisen Sie prob1 die Wahrscheinlichkeit zu, 8 oder weniger Schüsse zu machen, und drucken Sie das Ergebnis aus.
+- Weisen Sie prob2 die Wahrscheinlichkeit zu, alle 10 Aufnahmen zu machen, und drucken Sie das Ergebnis aus.
+
+```{r, assign=T}
+set.seed(1910837262)
+# Generate binomial data
+data.binom2 <- data.frame(Treffer = rbinom(1000, 10, 0.8))
+
+# Plot the distribution
+
+ggplot(data = data.binom2, mapping = aes(x = Treffer)) +
+  geom_histogram(binwidth = 1, color = "white")
+
+# Das Histrogramm zeigt einen leichten Skew rechts. Das zeigt sich darin, dass deutlich häufiger zu 9 Treffern als zu 7 Treffern gekommen ist.
+
+
+# Assign and print probability of 8 or less successes
+prob1 <- pbinom(8, 10, 0.8)
+prob1
+#Die Wahrschienlichkeit, dass ich mindestens 8 mal treffe bei 10 Versuchen liegt bei 62,4 %
+
+
+# Assign and print probability of all 10 successes
+prob2 <- dbinom(10, 10, 0.8)
+prob2
+#Die Wahrscheinlichkeit, dass ich 10 mal treffe liegt bei 10,7 %.
+```
+
+
+
+
+# Aufgabe 3: Normalverteilung [3 Punkte]
+Kommen wir zur erkennbarsten und nützlichsten Verteilung des Bündels: der Normal- oder Gaußverteilung. In den Folien haben wir kurz auf die Form der Glockenkurve eingegangen und wie die Normalverteilung zusammen mit dem zentralen Grenzwertsatz es uns ermöglicht, Hypothesentests durchzuführen.
+
+Ähnlich wie bei den vorherigen Übungen werden Sie hier zunächst einige Daten simulieren und die Verteilung untersuchen, dann etwas tiefer eintauchen und die Wahrscheinlichkeit untersuchen, dass bestimmte Beobachtungen stattfinden.
+
+## Anweisungen
+
+- Erzeugen Sie die Daten für die Verteilung mit der Funktion rnorm() mit der Größe 1000; weisen Sie sie der Datenvariablen zu.
+- Zeigen Sie ein Histogramm an; untersuchen Sie die Form der Verteilung.
+- Wie hoch ist die Wahrscheinlichkeit einer Beobachtung bei einer standardisierten Normalverteilung größer als 2?
+- Wenn man sich unsere Stichprobe ansieht, wie hoch ist die Wahrscheinlichkeit einer Beobachtung größer als 2?
+- Diskutieren Sie Sample-Probability vs "True"-Probability
+
+```{r, assign=T}
+set.seed(1910837262)
+# Generate normal data
+data.norm <- data.frame(values = rnorm(1000))
+
+# Plot distribution
+ggplot(data = data.norm, mapping = aes(x = values))+
+  geom_histogram(binwidth = 0.1, color = "white")
+
+# Das Histogram zeigt, dass es einige Spitzen gibt. Außerdem ist die höchste Säule nicht direkt bei 0.
+
+# Compute and print true probability for greater than 2
+true_prob <- 1 -pnorm(2)
+true_prob
+
+# Compute and print sample probability for greater than 2 (by hand)
+sample_prob <- 1 - pnorm(2, mean = mean(data.norm$values), sd = sd(data.norm$values))
+sample_prob
+
+# Es gibt eine kleine Differenz zwischen der "wahren" Wahrscheinlichkeit und der Wahrscheinlichkeit in meinem Beispiel. Aber da es sich um eine Differenz im prozentualen Nachkommabereich handelt, würde ich es für vernachlässigbar halten.
+```
+
+
+
+
+
+
+
+# Aufgabe 4: Konfidenzintervall von Hand [5 Punkte]
+In dieser Übung üben Sie die Berechnung von Konfidenzintervalle, indem Sie ein Konfidenzintervall von Hand erstellen und keine anderen Pakete als die für Sie importierten verwenden.
+
+Wir haben den entsprechenden z-Score für ein 95% Konfidenzintervall und den Sample-Mittelwert den Variablen z_score und sample_mean zugewiesen, um die Dinge ein wenig zu vereinfachen.
+
+## Anweisungen
+
+- Berechnen Sie den Standardfehler und die Fehlerquote mit Hilfe der std.error-Funktion und der für Sie definierten Variablen z_score.
+- Berechnen und drucken Sie die untere Grenze unseres Vertrauensintervalls.
+- Berechnen und drucken Sie die obere Grenze unseres Vertrauensintervalls.
+
+
+```{r, assign=T}
+z_score <- 2.7764451051977987
+library(plotrix)
+z_score <- 2.7764451051977987
+nums <- c(1, 2, 3, 4, 5)
+confidence <- 0.95
+
+# Berechnen Sie den Standardfehler und die Fehlerquote.
+std_err <- std.error(nums)
+std_err
+margin_error <- std_err * z_score
+margin_error
+# Berechnen und ausgeben des unteren Schwellenwerts
+lower <- mean(nums)-margin_error
+lower
+# Berechnen und ausgeben des oberen Schwellenwerts
+upper <- mean(nums)+margin_error
+upper
+
+```
+
+
+
+
+# Aufgabe 5: Anwenden von Konfidenzintervallen [4 Punkte]
+In der Praxis werden Sie keine Vertrauensintervalle manuell kodieren. Diesen Prozess soll rationalisiert werden und einige weitere Tendenzen von Intervallschätzungen untersucht.
+
+In dieser Übung haben wir eine Binomialprobe der Anzahl der Köpfe in 50 fairen Münzwürfen erzeugt, die als Kopfvariable gespeichert sind. Sie berechnen ein paar verschiedene Konfidenzintervalle für diese Stichprobe und skalieren Ihre Arbeit dann für 10 ähnliche Stichproben.
+
+Die Funktion prop.test() ist bereits importiert, um Ihnen bei der Berechnung von Konfidenzintervallen zu helfen.
+
+## Anweisungen
+- Berechnen und drucken Sie ein 99%iges Konfidenzintervall für 50 Versuche; enthält es den wahren Anteil eines fairen Münzwurfs?
+- Passen Sie Ihren Code an, um diesmal ein 90% Konfidenzintervall zu erzeugen; enthält er diesmal den wahren Anteil?
+- Wiederholen Sie diesen Prozess des Samplings, berechnen Sie das Konfidenzintervall und drucken Sie das Ergebnis 10 mal in einer Schleife aus.
+- Überprüfen Sie Ihre Ergebnisse des Konfidenzintervalls aus dem letzten Schritt. Sind alle "Samples" fair?
+
+
+```{r}
+heads <- rbinom(1, 50, 0.5)
+confidence_int <-  prop.test(heads, 50, conf.level = 0.99)
+confidence_int$conf.int
+confidence_int.9 <- prop.test(heads, 50, conf.level = 0.9)
+confidence_int.9$conf.int
+# repeat 10 times
+LängeKonfidenzintervalle <- c(1,2,3,4,5,6,7,8,9,10)
+Konfidenzintervalle_untereGrenze <- c()
+Konfidenzintervalle_obereGrenze <- c()
+for(i in LängeKonfidenzintervalle ){
+  verteilung <- rbinom(1, 50, 0.5)
+  confidenceintervalls <- prop.test(verteilung, 50, conf.level = 0.9)
+  Konfidenzintervalle_untereGrenze [i]<- confidenceintervalls$conf.int[1]
+  Konfidenzintervalle_obereGrenze [i]<- confidenceintervalls$conf.int[2]
+}
+# check results
+Konfidenzintervalle_untereGrenze
+Konfidenzintervalle_obereGrenze
+```
+
+
+
+
+# Aufgabe 6: Samples from a rolled die [4 Punkte]
+Lassen Sie uns durch die Generierung einer Simulation arbeiten. Sie arbeiten mit dem gleichen Szenario wie auf den Folien und simulieren Rollen von einem Standardwürfel mit den Nummern 1 bis 6 mit der Funktion sample(). Werfen Sie einen Blick in die Dokumentation dieser Funktion, wenn Sie ihr noch nie begegnet sind.
+
+Angefangen bei einer kleinen Probe und der Arbeit bis hin zu einer größeren Probe, untersuchen Sie die Outcome-Mittel und kommen Sie zu einem Schluss über das zugrunde liegende Theorem.
+
+## Anleitung
+
+- Erzeugen Sie ein Sample von 10 Würfeln mit der Funktion sample(); weisen Sie es unserer Variable `small` zu.
+- Weisen Sie den Mittelwert der Probe small_mean zu und drucken Sie die Ergebnisse aus; beachten Sie, wie nah sie dem wahren Mittelwert ist.
+- Erstellen Sie ebenfalls ein größeres Sample von 1000 Würfen und weisen Sie die Liste unserer großen Variablen zu.
+- Weisen Sie den Mittelwert der größeren Probe large_mean zu und drucken Sie den Mittelwert; welcher Satz ist hier am Werk?
+
+```{r, assign=T} 
+set.seed(1910837262)
+# Create a sample of 10 die rolls
+small <- c(sample(6, 10, 1/6))
+
+# Calculate and print the mean of the sample
+small_mean <- mean(small)
+small_mean
+
+die_true <- c(1, 2, 3, 4, 5, 6)
+mean(die_true)
+
+# Der Mittelwert meines Samples small ist geringer als als der "wahre" Mittelwert. Da die Größe des Samples mit 10 Würfen ziemlich klein ist, finde ich die Abweichung noch in Ordnung.
+
+# Create a sample of 1000 die rolls
+large <- c(sample(6, 1000, 1/6))
+
+# Calculate and print the mean of the large sample
+large_mean  <-  mean(large)
+large_mean
+
+# Der Mean des größeren Samples hat sich deutlich dem "wahren" Mean angenähert. Hier können wir das Gesetz der großen Zahlen beobachten.
+```
+
+
+
+
+
+# Aufgabe 7: Simulation des Central Limit Theorem [3 Punkte]
+Nun, da wir etwas Übung haben, eine Probe zu erstellen, werden wir uns mit der Simulation des zentralen Grenzwertsatzes befassen. Wir werden uns auch weiterhin mit einem Standardwürfel mit den Nummern 1 bis 6 beschäftigen.
+
+Um dies zu tun, erstellen Sie einen Vektor von Sample-Mitteln aus numpy und untersuchen Sie die Verteilung dieser mit dem ggplot-Paket.
+
+## Anweisungen
+
+- Erstellen Sie ein Vektor genannt `means` mit 1000 Probenmitteln aus Proben von 30 gewürfelten Würfeln.
+- Erstellen und zeigen Sie ein Histogramm der Mittel; untersuchen und beschreiben Sie die Form der Verteilung.
+- Passen Sie Ihren Code an, um nur 100 Proben im Mean-Vektor zu visualisieren; hat sich die Verteilung überhaupt geändert?
+
+```{r}
+# Create a vector of 1000 sample means of size 30☺
+library(moderndive)
+set.seed(1910837262)
+
+sample_all <- data.frame(Würfe = sample(6, 30000, 1/6))
+thousand_sample <- sample_all %>%
+  rep_sample_n(size = 30, reps = 1000)
+
+grouped_sample <- thousand_sample %>%
+  group_by(replicate) %>%
+  summarise(mean = mean(Würfe))
+
+means <- c(grouped_sample$mean)
+
+# Create and show a histogram of the means
+
+#Histogramm mit 1000 Proben
+
+ggplot(data = grouped_sample, mapping = aes(x = mean))+
+     geom_histogram(binwidth = 0.1, color = "white")
+
+# Adapt code for 100 samples of size 30
+sample_all100 <- data.frame(Würfe = sample(6, 3000, 1/6))
+thousand_sample100 <- sample_all %>%
+     rep_sample_n(size = 30, reps = 100)
+
+grouped_sample100 <- thousand_sample %>%
+    group_by(replicate) %>%
+    summarise(mean = mean(Würfe))
+
+
+means_100 <- c(grouped_sample100$mean)
+# Create and show a histogram of the means
+
+#Histogramm mit 100 Proben
+ggplot(data = grouped_sample100, mapping = aes(x = mean))+
+      geom_histogram(binwidth = 0.1, color = "white")
+```
+
+
+
+# Solution
+

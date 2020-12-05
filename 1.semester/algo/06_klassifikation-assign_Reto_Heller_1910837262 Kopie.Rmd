@@ -1,0 +1,698 @@
+---
+title: "Klassifikation"
+author: "Reto Heller 1910837262"
+date: '2019-01-01 (updated: `r Sys.Date()`)'
+subtitle: Algorithmik und Statistik 1
+institute: FH Kufstein
+---
+
+Bitte um Beachtung der [Übungs-Policy](https://weblearn.fh-kufstein.ac.at/mod/page/view.php?id=64482) für genaue Anweisungen und einige Beurteilungsnotizen. Fehler bei der Einhaltung ergeben Punktabzug.
+
+```{r setup}
+library(statistics4ds)
+library(tidyverse)
+library(FNN)
+library(dplyr)
+library(ggplot2)
+library(pROC)
+library(plotROC)
+```
+
+
+# Aufgabe 1: Krebserkennung mit KNN [3 Punkte]
+
+Für diese Übung werden wir Daten aus [`wisc-trn.csv`](wisc-trn.csv) und [`wisc-tst.csv`](wisc-tst.csv) verwenden, die jeweils Zug- und Testdaten enthalten. Dies ist eine Modifikation des Brustkrebs-Wisconsin-(Diagnose-)Datensatzes aus dem UCI Machine Learning Repository. Es wurden nur die ersten 10 Merkmalsvariablen bereitgestellt.
+
+- [UCI](https://archive.ics.uci.edu/ml/datasets/Breast+Cancer+Wisconsin+(Diagnostic))
+- [Data Detail](https://archive.ics.uci.edu/ml/machine-learning-databases/breast-cancer-wisconsin/wdbc.names)
+
+Sie sollten erwägen, die Antwort als Faktorvariable zu erzwingen. 
+
+Betrachten Sie zwei verschiedene Vorverarbeitungs-Setups:
+
+- **Setup 1**
+    - Numerische Variablen nicht skaliert. 
+- **Setup 2**
+    - Numerische Variablen werden auf den Mittelwert 0 und die Standardabweichung 1 skaliert.
+
+Für jeden Aufbau sind KNN-Modelle mit Werten von `k` von `1` bis `200` zu trainieren. Dabei werden nur die Variablen `Radius`, `Symmetrie` und `Textur` verwendet. Berechnen Sie für jede dieser Größen den Klassifizierungsfehler der Prüfung. Diese Ergebnisse sind in einer einzigen Darstellung zusammenzufassen, die den Prüffehler als Funktion von `k` darstellt. (Die Darstellung hat zwei "Kurven", eine für jeden Aufbau.) Ihre Darstellung sollte visuell ansprechend und gut beschriftet sein und eine Legende enthalten.
+```{r}
+set.seed(1910837262)
+library(readr)
+library(class)
+wisc_trn <- read_csv("data/wisc-trn.csv")
+wisc_tst <- read_csv("data/wisc-tst.csv")
+
+knn_x_trn <- wisc_trn %>%
+  select(radius,  texture, symmetry)
+knn_x_tst <- wisc_tst %>%
+  select(radius, texture, symmetry)
+knn_y_trn <- wisc_trn %>%
+  select(class)
+knn_y_tst <- wisc_tst %>%
+  select(class)
+
+calc_class_err = function(actual, predicted) {
+  mean(actual != predicted)
+}
+#SetUp 1
+k_to_try = 1:200
+err_k_setup1 = rep(x = 0, times = length(k_to_try))
+
+for (i in seq_along(k_to_try)) {
+  pred_setup1 = knn(train = knn_x_trn, 
+             test  = knn_x_tst, 
+             cl    = knn_y_trn$class, 
+             k     = k_to_try[i])
+  err_k_setup1[i] = calc_class_err(knn_y_tst$class, pred_setup1)
+}
+
+#SetUp 2
+err_k_setup2 = rep(x = 0, times = length(k_to_try))
+
+for (i in seq_along(k_to_try)) {
+  pred_setup1 = knn(train = scale(knn_x_trn), 
+             test  = scale(knn_x_tst), 
+             cl    = knn_y_trn$class, 
+             k     = k_to_try[i])
+  err_k_setup2[i] = calc_class_err(knn_y_tst$class, pred_setup1)
+}
+
+#Übersichts Dataframe
+knn_df <- data.frame(number_of_k = k_to_try, error_setup1 = err_k_setup1, error_setup2 = err_k_setup2)
+
+head(knn_df)
+
+
+y1 <- knn_df$error_setup1
+y2 <- knn_df$error_setup2
+
+ggplot(data=knn_df)+
+      geom_line(mapping=aes(y=y1,x= knn_df$number_of_k,color="Y1"),size=1 ) +
+      geom_line(mapping=aes(y=y2,x= knn_df$number_of_k,color="Y2"),size=1) +
+      scale_color_manual(values = c('Y1' = 'darkblue','Y2' = 'red')) +
+        labs(title = "Error Rate Setup1 vs Setup2", color = 'Setups', xlab = "Number of k's", ylab = "Error Rate")  
+#Ich bevorzuge die logistische Regression, da ich es gut verständlich finde mit den aus den Log Odds erzeugten Wahrscheinlichkeiten zu arbeiten. Außerdem kann man die Ergebnisse der Logistischen Regression übersichtlich in der Konfusionsmatrix darstellen lassen und erhält einen klaren Überblick über die Stärken und Schwächen des Modells.
+#Die Error Rate des KNN-Verfahren ist da weit weniger übersichtlich meiner Meinung nach.
+```
+
+
+```
+
+# Aufgabe 2: Krebserkennung mit logistischer Regression [4 Punkte]
+
+Wir verwenden den Datensatz und Split von Aufgabe 1.
+
+Betrachten Sie eine additive logistische Regression, die *nur zwei Prädiktoren*, `Radius` und `Symmetrie`, berücksichtigt. Benutzen Sie dieses Modell zur Schätzung 
+
+$$
+p(x) = P(Y = \texttt{M} \mid X = x).
+$$
+```{r}
+log_wisc_trn = wisc_trn
+log_wisc_trn$class = as.numeric(ifelse(log_wisc_trn$class == "M","1", "0"))
+
+log_wisc_tst = wisc_tst
+log_wisc_tst$class = as.numeric(ifelse(log_wisc_tst$class == "M","1", "0"))
+# M = 1
+# B = 0
+logistic_model <- glm(class ~ radius + symmetry, data = log_wisc_trn, family = "binomial")
+summary(logistic_model)
+
+#Der Radius, die Symmetrie und der Intercept weisen einen niedrigen p-Value aus und sind deshalb für das Modell signifikant. Beiden Werten für die Koeffizienten handelt es sich um die Log Odds. Der Intercept weist einen negativen z-Wert aus. Der Median der Residuals ist leicht negativ. Die IQR der Residuals reicht von -0,35 bis zu 0,09. 
+```
+```{r}
+pred_logreg <- predict(logistic_model, log_wisc_tst)
+prob_pred <- 1/(1+exp(-pred_logreg))
+summary(prob_pred)
+# Die Log Odds wurden nun in Wahrscheinlichkeiten umgewandelt und der Mean der errechneten Wahrscheinlichkeiten liegt bei 36,2 % Prozent, dass es sich um die Klasse M handelt. 
+
+log_pred_point1 = ifelse(prob_pred > 0.1, "M", "B")
+log_pred_point5 = ifelse(prob_pred > 0.5, "M", "B")
+log_pred_point9 = ifelse(prob_pred > 0.9, "M", "B")
+```
+```{r}
+#table[1,1] = True Negative
+#table[1,2] = False Negative
+#table[2,1] = False Positive
+#table[2,2] = True Positive
+```
+
+Berichten Sie die Testsensitivität, Testspezifität und Testgenauigkeit für drei Klassifikatoren, wobei jeder einen anderen Grenzwert für die vorhergesagte Wahrscheinlichkeit verwendet:
+
+$$
+\hat{C}(x) =
+\begin{cases} 
+      M & \hat{p}(x) > c \\
+      B & \hat{p}(x) \leq c
+\end{cases}
+$$
+
+- $c = 0.1$
+- $c = 0.5$
+- $c = 0.9$
+```{r}
+library(caret)
+library(e1071)
+train_tst_point1 = table(predicted = log_pred_point1, actual = log_wisc_tst$class)
+train_tst_point5 = table(predicted = log_pred_point5, actual = log_wisc_tst$class)
+train_tst_point9 = table(predicted = log_pred_point9, actual = log_wisc_tst$class)
+#confusionMatrix(as.factor(log_pred_point9), reference = as.factor(log_wisc_tst$class))
+
+precision_point1 <- train_tst_point1[2,2]/sum(train_tst_point1[2,])
+sensitivity_point1 <-train_tst_point1[2,2]/sum(train_tst_point1[,2])
+specificity_point1 <-train_tst_point1[1,1]/sum(train_tst_point1[,1])
+
+precision_point5 <- train_tst_point5[2,2]/sum(train_tst_point5[2,])
+sensitivity_point5 <-train_tst_point5[2,2]/sum(train_tst_point5[,2])
+specificity_point5 <-train_tst_point5[1,1]/sum(train_tst_point5[,1])
+
+precision_point9 <- train_tst_point9[2,2]/sum(train_tst_point9[2,])
+sensitivity_point9 <-train_tst_point9[2,2]/sum(train_tst_point9[,2])
+specificity_point9 <-train_tst_point9[1,1]/sum(train_tst_point9[,1])
+
+```
+
+```{r}
+overview_table_wisc <- data.frame(precision = c(precision_point1, precision_point5, precision_point9), sensitivity = c(sensitivity_point1, sensitivity_point5, sensitivity_point9), specificity = c(specificity_point1, specificity_point5, specificity_point9), row.names = c("point1-mod", "point5-mod", "point9-mod"))
+
+overview_table_wisc
+# Wie zu erwarten ist die Sensitivität bei dem Modell mit der Wahrscheinlichkeit von über 90% mit Abstand am geringsten. Dafür ist bei diesem Modell die Spezifizität am höchsten. Die Präzision ist aber auch bei diesem Modell am höchsten, was bei einem Umgang mit Daten zur Krebsdiagnose sehr wichtig ist.
+```
+
+Wir werden `M` (maligne) als die "positive" Klasse betrachten, wenn wir die Sensitivität und Spezifität berechnen. Fassen Sie diese Ergebnisse in einer einzigen gut formatierten Tabelle zusammen.
+
+# Aufgabe 3: Wetter Logistische Regression [4 Punkte]
+Kommen wir zur logistischen Regression. Sie werden wieder mit dem gleichen Wetterdatensatz arbeiten, aber das Ziel ist es, vorherzusagen, ob es morgen regnen wird. Wir haben Ihre Train- und Testsets für Sie erstellt. Ihre abhängigen Variablen sind die Features Humidity9am und Humidity3pm
+
+Achtung die Daten sind nicht normalisiert, skalieren Sie diese gegebenfalls und geben Sie die Auswirkung der Normalisierung an.
+
+## Anweisungen
+- Erstellen und fitten Sie das logistic_model mit train
+- Geben Sie die Genauigkeit Ihres Modells auf den Testdaten an.
+- Betrachten Sie die Modell-Koeffizienten, was können Sie daraus schließen?
+
+```{r}
+library(caret)
+set.seed(1910837262)
+weatherAUS <- read_csv("data/weatherAUS.csv")
+
+weatherAUS_n <- weatherAUS[sample(nrow(weatherAUS), 1000),]
+trainIndex <- createDataPartition(weatherAUS_n$RainTomorrow, p = .75, 
+                                  list = FALSE, 
+                                  times = 1)
+
+train_weather_hum <- weatherAUS_n[ trainIndex, ] %>% 
+  select(RainTomorrow, Humidity9am, Humidity3pm) %>% 
+  na.omit()
+test_weather_hum  <- weatherAUS_n[-trainIndex, ] %>% 
+  select(RainTomorrow, Humidity9am, Humidity3pm) %>% 
+  na.omit()
+
+
+train_weather_hum_scaled <-data.frame(Humidity9am = scale(train_weather_hum$Humidity9am), Humidity3pm = scale(train_weather_hum$Humidity3pm), RainTomorrow = train_weather_hum$RainTomorrow)
+
+test_weather_hum_scaled <-data.frame(Humidity9am = scale(test_weather_hum$Humidity9am), Humidity3pm = scale(test_weather_hum$Humidity3pm), RainTomorrow = test_weather_hum$RainTomorrow)
+
+#1 = Yes
+#0 = No
+
+train_weather_hum$RainTomorrow = as.numeric(ifelse(train_weather_hum$RainTomorrow  == "Yes","1", "0"))
+test_weather_hum$RainTomorrow = as.numeric(ifelse(test_weather_hum$RainTomorrow  == "Yes","1", "0"))
+train_weather_hum_scaled$RainTomorrow = as.numeric(ifelse(train_weather_hum_scaled$RainTomorrow  == "Yes","1", "0"))
+test_weather_hum_scaled$RainTomorrow = as.numeric(ifelse(test_weather_hum_scaled$RainTomorrow  == "Yes","1","0"))
+
+# Create and fit your model
+logistic_model_weather <- glm(RainTomorrow ~ Humidity9am + Humidity3pm, data = train_weather_hum, family = "binomial")
+
+logistic_model_weather_scaled <- glm(RainTomorrow ~ Humidity9am + Humidity3pm, data = train_weather_hum_scaled, family = "binomial")
+# Durch die Sklaierung haben sich die Koeffizienten des Modells verändert. Der Intercept für das nicht skalierte Modell liegt bei -4,87 und für das skalierte Modell bei -1,78 .Außerdem ist der Koeffizient für die Nachmittagsfeuchtigkeit beim nicht skalierten Modell nur leicht positiv (0,07) und beim skalierten Modell 1,55. 
+
+# Compute and print the accuracy
+preds_weather <- predict(logistic_model_weather, test_weather_hum)
+prob_pred_weather <- 1/(1+exp(-preds_weather))
+log_pred_weather = ifelse(prob_pred_weather > 0.5, "1", "0")
+
+
+
+test_tab_weather <- table(predicted = log_pred_weather, actual = test_weather_hum$RainTomorrow)
+
+accurracy <- (test_tab_weather[1,1] + test_tab_weather[2,2])/length(test_weather_hum$RainTomorrow)
+accurracy
+
+preds_weather_scaled <- predict(logistic_model_weather_scaled, test_weather_hum_scaled)
+prob_pred_weather_scaled <- 1/(1+exp(-preds_weather_scaled))
+log_pred_weather_scaled = ifelse(prob_pred_weather_scaled > 0.5, "1", "0")
+
+test_tab_weather_scaled <- table(predicted = log_pred_weather_scaled, actual = test_weather_hum$RainTomorrow)
+
+accurracy_scaled <- (test_tab_weather_scaled[1,1] + test_tab_weather_scaled[2,2])/length(test_weather_hum$RainTomorrow)
+accurracy_scaled
+
+overview_scaled_weather <- data.frame(prob_weather = prob_pred_weather, prob_weather_scaled = prob_pred_weather_scaled, output_weather = log_pred_weather, output_weather_scaled = log_pred_weather_scaled)
+
+#Die Accuracy liegt bei 85,6%. 186 mal wurde kein Regen richtig vorhergesagt und 22 mal Regen richtig vorhergesagt. Sowohl beim skalierten als auch beim nicht skalierten logistischen Regressionsmodell. Die Wahrscheinlichkeiten sind zwar leicht unterschiedlich, aber sowohl das skalierte als auch das nicht skalierte Modell kommen auf das gleiche Ergebnis.
+
+# Assign and print the coefficents
+coefficients_log_weather <- logistic_model_weather$coefficients
+coefficients_log_weather
+
+coefficients_log_weather_scaled <- logistic_model_weather_scaled$coefficients
+coefficients_log_weather_scaled
+
+```
+
+```{r}
+#Histogram nicht skaliertes Modell Wahrscheinlichkeiten
+ggplot(data = overview_scaled_weather, mapping = aes(x = overview_scaled_weather$prob_weather))+
+  geom_histogram(binwidth = 0.1)
+```
+
+```{r}
+#Histogram skaliertes Modell Wahrscheinlichkeiten
+ggplot(data = overview_scaled_weather, mapping = aes(x = overview_scaled_weather$prob_weather_scaled))+
+  geom_histogram(binwidth = 0.1)
+```
+
+
+# Aufgabe 4: Wetter Klassifikation Evaluation [4 Punkte]
+In Fortführung der Evaluierungsmetriken werden Sie diesmal unser logistisches Regressionsmodell von früher evaluieren, mit dem Ziel, die binäre RainTomorrow-Feature mit Hilfe von 'Humidity'+"weiteren" vorherzusagen.
+
+Wir haben das Modell als `logistic_model` vorher definiert. Generieren und analysieren Sie die Confusionmatrix und berechnen Sie dann Präzision und Recall, bevor Sie eine Schlussfolgerung ziehen.
+
+## Anweisungen
+- Generieren und drucken Sie die Confusionmatrix für Ihr Modell; identifizieren Sie die Fehler Typ I und Typ II für die Testdaten.
+- Berechnen und geben Sie die Genauigkeit Ihres Models aus; können Sie erklären, warum Präzision in diesem Zusammenhang hilfreich ist?
+
+
+```{r}
+train_weather <- weatherAUS_n[ trainIndex, ] %>% 
+  select(RainTomorrow, Humidity9am, Humidity3pm, MinTemp, MaxTemp, Pressure9am, Pressure3pm, Location, WindSpeed3pm, WindSpeed9am) %>% 
+  na.omit()
+test_weather  <- weatherAUS_n[-trainIndex, ] %>% 
+  select(RainTomorrow, Humidity9am, Humidity3pm, MinTemp, MaxTemp, Pressure9am, Pressure3pm, Location, WindSpeed3pm, WindSpeed9am) %>% 
+  na.omit()
+
+train_weather$RainTomorrow = as.numeric(ifelse(train_weather$RainTomorrow  == "Yes","1", "0"))
+test_weather$RainTomorrow = as.numeric(ifelse(test_weather$RainTomorrow  == "Yes","1", "0"))
+#logistic_model
+log_mod_rain <- glm(formula = RainTomorrow ~ Humidity9am + Humidity3pm + MinTemp + MaxTemp + Pressure9am + Pressure3pm, data = train_weather, family = "binomial")
+summary(log_mod_rain)
+# In diesem Modell ist vor allem der Koeffizient Humidity3pm und der Intercept von statistischer Signifikanz. Die anderen Koeffizienten weisen allen einen p-Value von größer 0,05 auf. 
+# Generate and output the confusion matrix
+preds_weather_rain <- predict(log_mod_rain, test_weather)
+prob_pred_rain <- 1/(1+exp(-preds_weather_rain))
+log_pred_rain = ifelse(prob_pred_rain > 0.5, "1", "0")
+
+test_tab_rain <- table(predicted = log_pred_rain, actual = test_weather$RainTomorrow)
+tst_con_mat = confusionMatrix(test_tab_rain, positive = "1")
+tst_con_mat
+
+# Compute and print the precision
+precision_rain <- test_tab_rain[2,2]/sum(test_tab_rain[2,])
+
+# Compute and print the recall
+recall_rain <- test_tab_rain[2,2]/sum(test_tab_rain[,2])
+
+specificity_rain <- test_tab_rain[1,1]/sum(test_tab_rain[,1])
+
+#In diesem Beispiel liegt das Rare Class Problem vor, da es deutlich weniger Regentage als Tage, an denen es nicht regnet gibt. Up oder Downsamplen könnte hier zum Beispiel helfen. # Da es hier darum geht die Regentage herauszufinden, hat die Präzision die größte Aussagekraft.
+
+#table[1,1] = True Negative
+#table[1,2] = False Negative
+#table[2,1] = False Positive
+#table[2,2] = True Positive
+
+#Es wurden 26 Werte als Falsch Negative klassiert und 11 Werte als falsch positiv.
+```
+
+
+```{r}
+```
+
+
+
+# Aufgabe 5 Wetter Klassifikatoren vergleichen [5 Punkte]
+
+Verwenden Sie die Daten in `weatherAUS`, nun mit allen Variablen, die Train- bzw. Testdaten enthalten (von vorher). Als Antwort ist `RainTomorrow` zu verwenden. Nach dem Import der Daten `RainTomorrow` als Faktor erzwingen, falls dies nicht bereits der Fall ist.
+
+Erstellen Sie ein Pair-Plot für die Trainingsdaten und trainieren Sie dann die folgenden Modelle unter Verwendung der beiden verfügbaren Prädiktoren:
+
+- 5 verschiedene Additive logistische Regression (Multinomiale Regression)
+  - **Intercept**: $\log \left( \frac{p(x)}{1 - p(x)} \right) = \beta_0$
+  - **Simple**: $\log \left( \frac{p(x)}{1 - p(x)} \right) = \beta_0 + \beta_1 \texttt{x}$
+- **Multiple**:$\log \left( \frac{p(x)}{1 - p(x)} \right) = \beta_0 + \beta_1 x_1  + \beta_2 x_2  + \beta_3 x_3$
+- **Additive**: Ein *additives* Modell mit (fast) allen ~5-10 verfügbaren Prädiktoren (Achtung: viele NAs, Faktoren z.B. Location)
+- **Interaction**: Ein *Interaktions* Modell, das alle Begriffe erster Ordnung (von Additive) und alle möglichen Wechselwirkungen in beide Richtungen enthält
+- LDA (mit aus Daten geschätzten Prioren)
+- LDA mit Flachprior
+- Naive Bayes (mit geschätzten Prioren aus den Daten)
+
+Berechnen Sie Test- und Trainfehlerraten für jedes Modell. Fassen Sie diese Ergebnisse in einer einzigen gut formatierten Tabelle zusammen.
+
+Interpretieren/visualisieren Sie die Modelle
+
+```{r}
+library(klaR)
+library(MASS)
+# pair plot
+library(GGally)
+train_weather_no_location <- subset(train_weather, select = -c(Location) )
+
+ggpairs(train_weather_no_location, cardinality_threshold = 45)
+#Der Pairplot zeigt, dass der Luftdruck sowohl am Nachmittag als auch am Vormittag ziemlich normalverteilt ist. Logischerweise korreliert der Vormittags Luftdruck auch stark positiv mit dem Nachmittagsluftdruck. Die Tageshöchstemperatur korreliert negativ mit der Nachmittagsluftfeuchtigkeit.
+
+x <- mean(train_weather$Humidity3pm)
+mod_intercept <- glm(RainTomorrow ~ 1, data = train_weather, family = "binomial")
+mod_simple <- glm(RainTomorrow ~ Humidity3pm, data = train_weather, family = "binomial")
+mod_multiple <- glm(RainTomorrow ~ Humidity3pm + Pressure3pm + MaxTemp, , data = train_weather, family = "binomial")
+mod_additive <- glm(RainTomorrow ~ Humidity3pm + Pressure3pm + MaxTemp + MinTemp + Humidity9am + Pressure9am + WindSpeed3pm + WindSpeed9am, data = train_weather, family = "binomial")
+mod_interaction <- glm(RainTomorrow ~ Humidity3pm * Humidity9am + Pressure3pm * Pressure9am + MaxTemp + MinTemp + WindSpeed3pm * WindSpeed9am, data = train_weather, family = "binomial")
+lda_mod <- lda(RainTomorrow ~ Humidity3pm + Pressure3pm + MaxTemp, prior = c(0.78, 0.22), data = train_weather)
+lda_mod2 <- lda(RainTomorrow ~ Humidity3pm + Pressure3pm + MaxTemp, prior = c(1,1)/2, data = train_weather)
+naive_Bayes <- NaiveBayes(as.factor(RainTomorrow) ~ Humidity3pm + Pressure3pm + MaxTemp, prior = c(0.78, 0.22), data = train_weather)
+
+```
+
+```{r}
+pred_trn_mod_intercept <- predict(mod_intercept, type = "response")
+pred_tst_mod_intercept <- predict(mod_intercept, test_weather, type = "response")
+log_pred_trn_mod_intercept = ifelse(pred_trn_mod_intercept > 0.5, "1", "0")
+log_pred_tst_mod_intercept = ifelse(pred_tst_mod_intercept > 0.5, "1", "0")
+trn_tab_mod_intercept <- table(predicted = log_pred_trn_mod_intercept, actual = train_weather$RainTomorrow)
+tst_tab_mod_intercept <- table(predicted = log_pred_tst_mod_intercept, actual = test_weather$RainTomorrow)
+
+pred_trn_mod_simple <- predict(mod_simple, type = "response")
+pred_tst_mod_simple <- predict(mod_simple, test_weather, type = "response")
+log_pred_trn_mod_simple = ifelse(pred_trn_mod_simple > 0.5, "1", "0")
+log_pred_tst_mod_simple = ifelse(pred_tst_mod_simple > 0.5, "1", "0")
+trn_tab_mod_simple <- table(predicted = log_pred_trn_mod_simple, actual = train_weather$RainTomorrow)
+tst_tab_mod_simple <- table(predicted = log_pred_tst_mod_simple, actual = test_weather$RainTomorrow)
+
+pred_trn_mod_multiple <- predict(mod_multiple, type = "response")
+pred_tst_mod_multiple <- predict(mod_multiple, test_weather, type = "response")
+log_pred_trn_mod_multiple = ifelse(pred_trn_mod_multiple > 0.5, "1", "0")
+log_pred_tst_mod_multiple = ifelse(pred_tst_mod_multiple > 0.5, "1", "0")
+trn_tab_mod_multiple <- table(predicted = log_pred_trn_mod_multiple, actual = train_weather$RainTomorrow)
+tst_tab_mod_multiple <- table(predicted = log_pred_tst_mod_multiple, actual = test_weather$RainTomorrow)
+
+pred_trn_mod_additive <- predict(mod_additive, type = "response")
+pred_tst_mod_additive <- predict(mod_additive, test_weather, type = "response")
+log_pred_trn_mod_additive = ifelse(pred_trn_mod_additive > 0.5, "1", "0")
+log_pred_tst_mod_additive = ifelse(pred_tst_mod_additive > 0.5, "1", "0")
+trn_tab_mod_additive <- table(predicted = log_pred_trn_mod_additive, actual = train_weather$RainTomorrow)
+tst_tab_mod_additive <- table(predicted = log_pred_tst_mod_additive, actual = test_weather$RainTomorrow)
+
+pred_trn_mod_interaction <- predict(mod_interaction, type = "response")
+pred_tst_mod_interaction <- predict(mod_interaction, test_weather, type = "response")
+log_pred_trn_mod_interaction = ifelse(pred_trn_mod_interaction > 0.5, "1", "0")
+log_pred_tst_mod_interaction = ifelse(pred_tst_mod_interaction > 0.5, "1", "0")
+trn_tab_mod_interaction <- table(predicted = log_pred_trn_mod_interaction, actual = train_weather$RainTomorrow)
+tst_tab_mod_interaction <- table(predicted = log_pred_tst_mod_interaction, actual = test_weather$RainTomorrow)
+
+pred_trn_lda_mod <- predict(lda_mod, train_weather)
+pred_tst_lda_mod <- predict(lda_mod, test_weather)
+train_matrix_lda_mod <- table(predict(lda_mod)$class, train_weather$RainTomorrow)
+tst_matrix_lda_mod <- table(predict(lda_mod, test_weather)$class, test_weather$RainTomorrow)
+
+pred_trn_lda_mod2 <- predict(lda_mod2, train_weather)
+pred_tst_lda_mod2 <- predict(lda_mod2, test_weather)
+train_matrix_lda_mod2 <- table(predict(lda_mod2)$class, train_weather$RainTomorrow)
+tst_matrix_lda_mod2 <- table(predict(lda_mod2, test_weather)$class, test_weather$RainTomorrow)
+
+pred_trn_bayes_mod <- predict(naive_Bayes, train_weather)
+pred_tst_bayes_mod <- predict(naive_Bayes, test_weather)
+train_matrix_bayes_mod <- table(predict(naive_Bayes)$class, train_weather$RainTomorrow)
+tst_matrix_bayes_mod <- table(predict(naive_Bayes, test_weather)$class, test_weather$RainTomorrow)
+```
+
+
+```{r}
+#sensitivity_trn_mod_intercept <- trn_tab_mod_intercept[2,2]/sum(trn_tab_mod_intercept[,2])
+#precision_trn_mod_intercept <- trn_tab_mod_intercept[2,2]/sum(trn_tab_mod_intercept[2,])
+#specificity_trn_mod_intercept <- trn_tab_mod_intercept[1,1]/sum(trn_tab_mod_intercept[,1])
+#accurracy_trn_mod_intercept <- (trn_tab_mod_intercept[2,2]+trn_tab_mod_intercept[1,1])/length(train_weather$RainTomorrow)
+
+sensitivity_trn_mod_simple <- trn_tab_mod_simple[2,2]/sum(trn_tab_mod_simple[,2])
+precision_trn_mod_simple <- trn_tab_mod_simple[2,2]/sum(trn_tab_mod_simple[2,])
+specificity_trn_mod_simple <- trn_tab_mod_simple[1,1]/sum(trn_tab_mod_simple[,1])
+accuracy_trn_mod_simple <- (trn_tab_mod_simple[2,2]+trn_tab_mod_simple[1,1])/length(train_weather$RainTomorrow)
+
+sensitivity_tst_mod_simple <- tst_tab_mod_simple[2,2]/sum(tst_tab_mod_simple[,2])
+precision_tst_mod_simple <- tst_tab_mod_simple[2,2]/sum(tst_tab_mod_simple[2,])
+specificity_tst_mod_simple <- tst_tab_mod_simple[1,1]/sum(tst_tab_mod_simple[,1])
+accuracy_tst_mod_simple <- (tst_tab_mod_simple[2,2]+tst_tab_mod_simple[1,1])/length(test_weather$RainTomorrow)
+
+
+sensitivity_trn_mod_additive <- trn_tab_mod_additive[2,2]/sum(trn_tab_mod_additive[,2])
+precision_trn_mod_additive <- trn_tab_mod_additive[2,2]/sum(trn_tab_mod_additive[2,])
+specificity_trn_mod_additive <- trn_tab_mod_additive[1,1]/sum(trn_tab_mod_additive[,1])
+accuracy_trn_mod_additive <- (trn_tab_mod_additive[2,2]+trn_tab_mod_additive[1,1])/length(train_weather$RainTomorrow)
+
+sensitivity_tst_mod_additive <- tst_tab_mod_additive[2,2]/sum(tst_tab_mod_additive[,2])
+precision_tst_mod_additive <- tst_tab_mod_additive[2,2]/sum(tst_tab_mod_additive[2,])
+specificity_tst_mod_additive <- tst_tab_mod_additive[1,1]/sum(tst_tab_mod_additive[,1])
+accuracy_tst_mod_additive <- (tst_tab_mod_additive[2,2]+tst_tab_mod_additive[1,1])/length(test_weather$RainTomorrow)
+
+sensitivity_trn_mod_interaction <- trn_tab_mod_interaction[2,2]/sum(trn_tab_mod_interaction[,2])
+precision_trn_mod_interaction <- trn_tab_mod_interaction[2,2]/sum(trn_tab_mod_interaction[2,])
+specificity_trn_mod_interaction <- trn_tab_mod_interaction[1,1]/sum(trn_tab_mod_interaction[,1])
+accuracy_trn_mod_interaction <- (trn_tab_mod_interaction[2,2]+trn_tab_mod_interaction[1,1])/length(train_weather$RainTomorrow)
+
+sensitivity_tst_mod_interaction <- tst_tab_mod_interaction[2,2]/sum(tst_tab_mod_interaction[,2])
+precision_tst_mod_interaction <- tst_tab_mod_interaction[2,2]/sum(tst_tab_mod_interaction[2,])
+specificity_tst_mod_interaction <- tst_tab_mod_interaction[1,1]/sum(tst_tab_mod_interaction[,1])
+accuracy_tst_mod_interaction <- (tst_tab_mod_interaction[2,2]+tst_tab_mod_interaction[1,1])/length(test_weather$RainTomorrow)
+
+sensitivity_trn_mod_lda <- train_matrix_lda_mod[2,2]/sum(train_matrix_lda_mod[,2])
+precision_trn_mod_lda <- train_matrix_lda_mod[2,2]/sum(train_matrix_lda_mod[2,])
+specificity_trn_mod_lda <- train_matrix_lda_mod[1,1]/sum(train_matrix_lda_mod[,1])
+accuracy_trn_mod_lda <- (train_matrix_lda_mod[2,2]+train_matrix_lda_mod[1,1])/length(train_weather$RainTomorrow)
+
+sensitivity_tst_mod_lda <- tst_matrix_lda_mod[2,2]/sum(tst_matrix_lda_mod[,2])
+precision_tst_mod_lda <- tst_matrix_lda_mod[2,2]/sum(tst_matrix_lda_mod[2,])
+specificity_tst_mod_lda <- tst_matrix_lda_mod[1,1]/sum(tst_matrix_lda_mod[,1])
+accuracy_tst_mod_lda <- (tst_matrix_lda_mod[2,2]+tst_matrix_lda_mod[1,1])/length(test_weather$RainTomorrow)
+
+
+sensitivity_trn_mod_lda2 <- train_matrix_lda_mod2[2,2]/sum(train_matrix_lda_mod2[,2])
+precision_trn_mod_lda2 <- train_matrix_lda_mod2[2,2]/sum(train_matrix_lda_mod2[2,])
+specificity_trn_mod_lda2 <- train_matrix_lda_mod2[1,1]/sum(train_matrix_lda_mod2[,1])
+accuracy_trn_mod_lda2 <- (train_matrix_lda_mod2[2,2]+train_matrix_lda_mod2[1,1])/length(train_weather$RainTomorrow)
+
+sensitivity_tst_mod_lda2 <- tst_matrix_lda_mod2[2,2]/sum(tst_matrix_lda_mod2[,2])
+precision_tst_mod_lda2 <- tst_matrix_lda_mod2[2,2]/sum(tst_matrix_lda_mod2[2,])
+specificity_tst_mod_lda2 <- tst_matrix_lda_mod2[1,1]/sum(tst_matrix_lda_mod2[,1])
+accuracy_tst_mod_lda2 <- (tst_matrix_lda_mod2[2,2]+tst_matrix_lda_mod2[1,1])/length(test_weather$RainTomorrow)
+
+sensitivity_trn_mod_bayes <- train_matrix_bayes_mod[2,2]/sum(train_matrix_bayes_mod[,2])
+precision_trn_mod_bayes <- train_matrix_bayes_mod[2,2]/sum(train_matrix_bayes_mod[2,])
+specificity_trn_mod_bayes <- train_matrix_bayes_mod[1,1]/sum(train_matrix_bayes_mod[,1])
+
+accuracy_trn_mod_bayes <- (train_matrix_bayes_mod[2,2]+train_matrix_bayes_mod[1,1])/length(train_weather$RainTomorrow)
+
+sensitivity_tst_mod_bayes <- tst_matrix_bayes_mod[2,2]/sum(tst_matrix_bayes_mod[,2])
+precision_tst_mod_bayes <- tst_matrix_bayes_mod[2,2]/sum(tst_matrix_bayes_mod[2,])
+specificity_tst_mod_bayes <- tst_matrix_bayes_mod[1,1]/sum(tst_matrix_bayes_mod[,1])
+accuracy_tst_mod_bayes <- (tst_matrix_bayes_mod[2,2]+tst_matrix_bayes_mod[1,1])/length(test_weather$RainTomorrow)
+
+
+
+```
+```{r}
+sensitivities <- c(sensitivity_trn_mod_simple, sensitivity_tst_mod_simple, sensitivity_trn_mod_additive, sensitivity_tst_mod_additive, sensitivity_trn_mod_interaction, sensitivity_tst_mod_interaction, sensitivity_trn_mod_lda, sensitivity_tst_mod_lda, sensitivity_trn_mod_lda2, sensitivity_tst_mod_lda2, sensitivity_trn_mod_bayes, sensitivity_tst_mod_bayes)
+
+precisions <- c(precision_trn_mod_simple, precision_tst_mod_simple, precision_trn_mod_additive, precision_tst_mod_additive, precision_trn_mod_interaction, precision_tst_mod_interaction, precision_trn_mod_lda, precision_tst_mod_lda, precision_trn_mod_lda2, precision_tst_mod_lda2, precision_trn_mod_bayes, precision_tst_mod_bayes)
+
+specificities <- c(specificity_trn_mod_simple, specificity_tst_mod_simple, specificity_trn_mod_additive, specificity_tst_mod_additive, specificity_trn_mod_interaction, specificity_tst_mod_interaction, specificity_trn_mod_lda, specificity_tst_mod_lda, specificity_trn_mod_lda2, specificity_tst_mod_lda2, specificity_trn_mod_bayes, specificity_tst_mod_bayes)
+
+accuracies <- c(accuracy_trn_mod_simple, accuracy_tst_mod_simple, accuracy_trn_mod_additive, accuracy_tst_mod_additive, accuracy_trn_mod_interaction, accuracy_tst_mod_interaction, accuracy_trn_mod_lda, accuracy_tst_mod_lda, accuracy_trn_mod_lda2, accuracy_tst_mod_lda2, accuracy_trn_mod_bayes, accuracy_tst_mod_bayes)
+
+summary_df <- data.frame(accuracy = accuracies, precision = precisions, specificity = specificities, sensitivity = sensitivities, row.names = c("trn_mod_simple", "tst_mod_simple", "trn_mod_additive", "tst_mod_additive", "trn_mod_interaction", "tst_mod_interaction", "trn_mod_lda", "tst_mod_lda", "trn_mod_lda2", "tst_mod_lda2", "trn_mod_naiveBayes", "tst_mod_naiveBayes"))
+
+summary_df
+
+```
+
+
+```{r warning=FALSE}
+plot(roc(RainTomorrow ~ Humidity3pm, data = train_weather), main = "ROC Curve Simple Model", print.thres = TRUE)
+```
+```{r}
+
+```
+
+
+# Optional: Aufgabe 6 Bias-Variance Tradeoff, Logistic Regression [X Punkte] 
+
+Führen Sie eine Simulationsstudie durch, um den Bias, die Varianz und den mittleren quadratischen Fehler der Schätzung von $p(x)$ mittels logistischer Regression zu schätzen. Erinnere dich daran, dass
+$p(x) = P(Y = 1 | X = x)$.
+
+Betrachten Sie das (wahre) logistische Regressionsmodell
+
+$$
+\log \left( \frac{p(x)}{1 - p(x)} \right) = 1 + 2 x_1  - x_2
+$$
+
+Um den vollständigen Datenerzeugungsprozess zu spezifizieren, betrachten Sie die folgende "R"-Funktion.
+
+```{r}
+make_sim_data = function(n_obs = 100) {
+  x1 = runif(n = n_obs, min = 0, max = 2)
+  x2 = runif(n = n_obs, min = 0, max = 4)
+  prob = exp(1 + 2 * x1 - 1 * x2) / (1 + exp(1 + 2 * x1 - 1 * x2))
+  y = rbinom(n = n_obs, size = 1, prob = prob)
+  data.frame(y, x1, x2)
+}
+```
+
+Im Folgenden wird also ein simulierter Datensatz gemäß dem oben definierten Datenerzeugungsprozess erzeugt.
+
+```{r}
+sim_data = make_sim_data()
+```
+
+Bewerten Sie Schätzungen von $p(x_1 = 0,5, x_2 = 0,75)$ aus vier passenden Modellen:
+
+$$
+\log \left( \frac{p(x)}{1 - p(x)} \right) = \beta_0
+$$
+```{r}
+intercept_mod <- glm(y ~ 1, data = sim_data, family = "binomial")
+```
+
+$$
+\log \left( \frac{p(x)}{1 - p(x)} \right) = \beta_0 + \beta_1 x_1  + \beta_2 x_2
+$$
+```{r}
+additive_mod <- glm(y ~ x1 + x2, data = sim_data, family = "binomial")
+```
+
+$$
+\log \left( \frac{p(x)}{1 - p(x)} \right) = \beta_0 + \beta_1 x_1  + \beta_2 x_2  + \beta_3 x_1x_2
+$$
+```{r}
+small_intercation_mod <- glm(y ~ x1 + x2 + (x1*x2), data = sim_data, family = "binomial")
+```
+
+$$
+\log \left( \frac{p(x)}{1 - p(x)} \right) = \beta_0 + \beta_1 x_1  + \beta_2 x_2 + \beta_3 x_1^2 + \beta_4 x_2^2 + \beta_5 x_1x_2
+$$
+```{r}
+poly_interaction_mod <- glm(y ~ x1 + x2 + poly(x1, 2, raw = TRUE)+ poly(x2, 2, raw = TRUE)+ (x1*x2), data = sim_data, family = "binomial")
+```
+
+Verwenden Sie `2000` Simulationen von Datensätzen mit einer Stichprobengröße von `30`, um den quadratischen Bias, die Varianz und den mittleren quadratischen Fehler der Schätzung von $p(x_1 = 0.5, x_2 = 0.75)$ unter Verwendung von $\hat{p}(x_1 = 0.5, x_2 = 0.75)$ für jedes Modell zu schätzen. Berichten Sie Ihre Ergebnisse in einer gut formatierten Tabelle.
+```{r}
+x = data.frame(x1 = 0.50, x2 = 0.75)
+predict(small_intercation_mod, x)
+```
+
+
+
+```{r warning=FALSE}
+set.seed(123456789)
+n_sims <- 2000
+n_models <- 4
+x = data.frame(x1 = 0.50, x2 = 0.75)
+#x1 = data.frame(x1 = 0.50)
+#x2 = data.frame(x2 = 0.75)
+predictions = matrix(0, nrow = n_sims, ncol = n_models)
+
+for (sim in 1:n_sims) {
+
+  sim_data = make_sim_data()
+
+  # fit models
+  fit_0 = glm(y ~ 1, data = sim_data, family = "binomial")
+  fit_1 = glm(y ~ x1 + x2, data = sim_data, family = "binomial")
+  fit_2 = glm(y ~ x1 + x2 + (x1*x2), data = sim_data, family = "binomial")
+  fit_3 = glm(y ~ x1 + x2 + poly(x1, 2, raw = TRUE)+ poly(x2, 2, raw = TRUE)+ (x1*x2), data = sim_data, family = "binomial")
+  
+  y <- c(sim_data$y)
+  
+  # get predictions
+  predictions[sim, 1] = predict(fit_0, x, type = "response")
+  predictions[sim, 2] = predict(fit_1, x, type = "response")
+  predictions[sim, 3] = predict(fit_2, x, type = "response")
+  predictions[sim, 4] = predict(fit_3, x, type = "response")
+  
+  predictions[sim, 1] = as.numeric(ifelse(predictions[sim, 1] > 0.5, "1", "0"))
+  predictions[sim, 2] = as.numeric(ifelse(predictions[sim, 2] > 0.5, "1", "0"))
+  predictions[sim, 3] = as.numeric(ifelse(predictions[sim, 3] > 0.5, "1", "0"))
+  predictions[sim, 4] = as.numeric(ifelse(predictions[sim, 4] > 0.5, "1", "0"))
+}
+
+
+```
+
+```{r}
+get_mse = function(truth, estimate) {
+  mean((estimate - truth) ^ 2)
+}
+
+get_bias = function(estimate, truth) {
+  mean(estimate) - truth
+}
+
+get_var = function(estimate) {
+  mean((estimate - mean(estimate)) ^ 2)
+}
+
+bias = apply(predictions, 2, get_bias, truth = y)
+variance = apply(predictions, 2, get_var)
+mse = apply(predictions, 2, get_mse, truth = y)
+summary_table <- tibble(model = c("intercept_model", "simple_model", "additive_model", "interaction_model"), MSE = mse, Bias_squared_x1 = bias[1,], Bias_squared_x2 = bias[2,], Variance = variance)
+
+
+```
+
+
+```{r}
+summary_table
+#Bei mir haben alle Modelle einen hohen Bias und eine sehr geringe Varianz. LAut dieser Tabelle sind sind alle Modelle stark underfitted. 
+```
+
+# Aufgabe 7 Konzeptprüfung [6 Punkte]
+
+Beantworten Sie die folgenden Fragen auf der Grundlage Ihrer Ergebnisse aus den Aufgaben **[je 1 Punkt]**.
+
+**(a)** In Aufgabe 5, warum schneidet Naive Bayes schlecht ab?
+```{r}
+#Weil es zu viele Prädiktoren waren. Das Naive Bayes Verfahren wird unpraktisch wenn zu viele Prädiktoren in einem Modell berücksichtigt werden.
+```
+
+
+**(b)** Basierend auf Ihren Ergebnissen in Aufgabe 1+2, welches dieser Modelle schneidet am besten ab?
+```{r}
+# Das skalierte KNN-Modell schneidet sehr gut ab mit einem k zwischen 30 und 50.
+# Bei den logistischen Regressionsmodell schneidet das Modell mit der 90-prozentigen Wahrscheinlichkeit am besten ab, da im Fall von der Erkennung von Krebs, eine hohe Präzision wichtig ist und dieses Modell die höchste Präzision ausweist.
+```
+
+
+**(c)** Basierend auf Ihren Ergebnissen in Aufgabe 1+2, welches dieser Modelle könnte Ihrer Meinung nach zu wenig geeignet sein?
+```{r}
+# Das logistiche Regressionsmodell mit der 10% Grenze ist meiner Meinung nach für die Erkennung von Krebs nicht geeignet. Die Sensitivität ist zwar hoch, doch die Präzision im Vergleich recht schwach.Auch die KNN-Modelle mit k > 150 machen keinen Sinn.
+```
+
+
+**(d)** Welches dieser Modelle könnte Ihrer Meinung nach aufgrund Ihrer Ergebnisse in Aufgabe 5 überdimensioniert sein?
+
+```{r}
+#Sowohl das Interaktionsmodell als auch das additive Modell mit den vielen Prädiktoren halte ich für überdimensioniert. Da die mit Abstand statistisch signifikantesten Prädiktoren die Feuchtigkeiten sind. Auch für das Naive BAyes Verfahren sollten nicht mehr als max. 3 Prädiktoren verwendet werden.
+```
+
+
+**(e)** Welche der Klassifikatoren aus Aufgaben 1+2 bevorzugen Sie?
+```{r}
+#Ich bevorzuge die logistische Regression, da ich es gut verständlich finde mit den aus den Log Odds erzeugten Wahrscheinlichkeiten zu arbeiten. Außerdem kann man die Ergebnisse der Logistischen Regression übersichtlich in der Konfusionsmatrix darstellen lassen und erhält einen klaren Überblick über die Stärken und Schwächen des Modells.
+#Die Error Rate des KNN-Verfahren ist da weit weniger übersichtlich meiner Meinung nach.
+```
+
+
+**(f)** Nennen Sie die Metrik, die Sie für Ihre Entscheidung verwendet haben, teilweise **(e)**, und einen Grund für die Verwendung dieser Metrik.
+```{r}
+# Ich habe alle meine Modelleregbnisse immer in der Konfusionsmatrix dargestellt und dann die verschiedenen Kennzahlen berechnet und die einzelnen Modelle auf dieser Basis verglichen.
+```
+  
+  
